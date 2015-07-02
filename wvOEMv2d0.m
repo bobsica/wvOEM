@@ -20,9 +20,8 @@
 date = 20150305;
 nb = '12';
 dextsp = [nb '30'];
-oemStop = 4000; %11000; %8000; %12000; %11000; %7000; % 8000;
-% 0308 8000/11000; 0305 
-oemStopA = 2000; % 0308 5000; 0305 
+oemStop = 3500; % 0308 8000/11000; 0305 
+oemStopA = 1000; % 0308 5000; 0305 3500/
 
 dataPath = '/Users/BobSica/Dropbox/matlab/matlabWork/fromMCH/ralmodata/';
 outPath = '/Users/BobSica/Dropbox/matlab/matlabWork/fromMCH/ralmoOEMwvOutput/';
@@ -40,7 +39,8 @@ oemGoA = 300; %300;
 pieceWise = true;
 normStop = 25000;
 deadTimeH = 4; %4.0; % ns
-dfacDeadH = 0.01; % night 0.01 day
+dfacDeadH = 0.01; % 0308 0.01, 0305 0.001
+dfacDeadN = dfacDeadH; %0.01;
 deadTimeN = 4;
 aposteriori = false; % if true use a posteriori analog variance
 % varMask = 0; % variance increase
@@ -81,11 +81,10 @@ in.zgoA = oemGoA;
 in.zstop = normStop; % this is where you cut data for normalization %11e3;
 in.zOEM = oemStop; % 8000; this is where you cut at end of makeQ for retrieval
 in.zOEMA = oemStopA;
-in.zCNnorm = 3000;
-%23000; % 8000 32000 %2000; % was 6000 point to find CN' guess: in v11 moved
-%down to 3000 m, but CN will be retrieved
-in.LRfree = 50; %25; % 50;
-in.LRpbl = 80; %100; % 75;
+zCNnorm = 3000;
+in.zCNnorm = min(zCNnorm,oemStopA);
+in.LRfree = 25; %25; % 50;
+in.LRpbl = 25; % was 80 for 0308
 in.LRtranHeight = 1800; % m, height the above 2 hand off to each other
 in.beamDiv = 0.09e-3; % mrad
 in.logAlpha = logAlpha; % required to set switch in FM in makeQ9
@@ -160,7 +159,6 @@ dfacDiv = 0.1; %0.1;
 dfacTheta = 0.1; %0.1;
 dfacSlope = 0.05;
 dfacAlpha = 0.1; %0.5;
-dfacDeadN = 0.01;
 dfacOD = 0.20;
 dfacAng = 0.01; % 0.05
 dfacCNp = 0.25; % was 0.25;
