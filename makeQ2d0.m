@@ -63,13 +63,10 @@ load './ralmoFixedOverlap.mat'
 dzRaw =  zCounts(2) - zCounts(1);
 y2HzRaw = clight ./ (2.*(deltaTime.*Rate).*dzRaw);
 
-%'no analog data'
 S.Sn2 = N2counts; % already in counts ./ (y2HzRaw./1e6);
 S.Swv = WVcounts; % ./ (y2HzRaw./1e6);
 S.Sn2A = N2countsA;
 S.SwvA = WVcountsA;
-S.Sn2varA = N2varA;
-S.SwvvarA = WVvarA;
 S.z = zCounts;
 tmpwv = y2HzRaw .* WVcounts;
 S.cSwv = (tmpwv./(1-tmpwv.*4e-9)) ./ y2HzRaw;
@@ -108,15 +105,13 @@ if in.coAddData == 1
     SNcoadd = S.Sn2(dgo(1):dstp(end));
     SHcoaddA = S.SwvA(dgo(1):dstp(end));
     SNcoaddA = S.Sn2A(dgo(1):dstp(end));
-    SHerrA = S.SwvvarA(dgo(1):dstp(end));
-    SNerrA = S.Sn2varA(dgo(1):dstp(end));
+%     SHerrA = S.SwvvarA(dgo(1):dstp(end));
+%     SNerrA = S.Sn2varA(dgo(1):dstp(end));
 else
     [tmpaddN,zzN] = coadd(S.Sn2,S.z,in.coAddData);
     [tmpaddH,zzH] = coadd(S.Swv,S.z,in.coAddData);
     [tmpaddNA,zzN] = coadd(S.Sn2A,S.z,in.coAddData);
     [tmpaddHA,zzH] = coadd(S.SwvA,S.z,in.coAddData);
-    [tmpaddNAvar,zzN] = coadd(S.Sn2varA,S.z,in.coAddData);
-    [tmpaddHAvar,zzH] = coadd(S.SwvvarA,S.z,in.coAddData);
     if in.zgo == 0
         'check this option'
         ssssttttoooopppp
@@ -152,40 +147,15 @@ else
     backVarHA = (std(SHcoaddA(findBH(1):end)-in.Aoffset)).^2;
     backVarNA = (std(SNcoaddA(findBN(1):end)-in.Aoffset)).^2;
 
-%if you want to fit linear backgrounds
-    [pN,sigmapN,regressN]=fitlinenp(zzN(findBN(1):end),SNcoaddA(findBN(1):end)...
-        - in.Aoffset);
-    [pH,sigmapH,regressH]=fitlinenp(zzN(findBH(1):end),SHcoaddA(findBH(1):end)...
-        - in.Aoffset);
-    AlinN = polyval(pN,zzN);
-    AlinH = polyval(pH,zzN);
-    
-%     CbackHA = backHA;
-%     backHA = AlinH;
-%     backNA = AlinN;
-    
-    SHerrA = ((1./sqrt(in.coAddData)).*(sqrt(tmpaddHAvar)./(SHcoaddA-backHA)) ...
-        .* SHcoaddA).^2;
-    SHerrA = SHerrA(dgoA(1):dstp(end));
-    SNerrA = ((1./sqrt(in.coAddData)).*(sqrt(tmpaddHAvar)./(SNcoaddA-backNA)) ...
-        .* SNcoaddA).^2;
-    SNerrA = SNerrA(dgoA(1):dstp(end));
     SHcoaddA = SHcoaddA(dgoA(1):dstp(end));
     SNcoaddA = SNcoaddA(dgoA(1):dstp(end));
     zN = zzN(dgo(1):dstp(end));
     zNA = zzN(dgoA(1):dstp(end)) - zAoffset;
-%     backNA = backNA(dgo(1):dstp(end));
-%     backHA = backHA(dgo(1):dstp(end));
-    
+end    
 % logic above is coadding analog decrease by 1/sqrt(bins), and the
 % uncertainty is the standard deviation relative to the analog
 % backscattered photons, so you take the background out for a percentage to
 % multiple the counts by.
-    
-%    backHA = backHA .* in.coAddData; backVarHA = in.coAddData.^2 .*
-%    backVarH; backNA = backNA .* in.coAddData; backVarNA = in.coAddData.^2
-%    .* backVarNA;
-end
 
 dzDATA = zN(2) - zN(1);
 y2Hz = clight ./ (2.*(deltaTime.*Rate).*dzDATA);
@@ -355,15 +325,6 @@ flt = find(zN <= ralmoO.zoverlap(end));
 olap(flt) = interp1(ralmoO.zoverlap,ralmoO.overlap,zN(flt),'linear');
 olapD(flt) = interp1(ralmoO.zoverlap,ralmoO.overlapD,zN(flt),'linear');
 
-% Find a priori CN' at height zCNnorm
-fmmrz = find(zN > in.zCNnorm); 
-CNp = ((SNcoadd(fmmrz(1)) - backN) .* zN(fmmrz(1)).^2) ./ (nNz(fmmrz(1))...
-    .* tauR(fmmrz(1)) .* tauN(fmmrz(1)) .* olap(fmmrz(1))); 
-CHp = slope .* CNp; % note slope is in vmr units
-CNpA = ((SNcoaddA(fmmrz(1)) - backNA) .* zN(fmmrz(1)).^2) ./ (nNz(fmmrz(1))...
-    .* tauR(fmmrz(1)) .* tauN(fmmrz(1)) .* olap(fmmrz(1))); 
-CHpA = slopeA .* CNpA; % note slope is in vmr units
-
 %'background out of variance digital calculation'
 yObsN = y2Hz .* (SNcoadd); %-backN);
 yObsH = y2Hz .* (SHcoadd); %-backH);
@@ -382,7 +343,7 @@ Q.SHcoadd = SHcoadd(1:dendN(end));
 Q.yTrueN = yTrueN(1:dendN(end));
 Q.yTrueH = yTrueH(1:dendN(end));
 
-dgoNA = find(zN >= in.zgoA);
+dgoNA = find(zNA >= in.zgoA);
 dendNA = find(zNA <= in.zOEMA);
 Q.zDATAnA = zNA(1:dendNA(end));
 Q.SNcoaddA = SNcoaddA(1:dendNA(end));
@@ -518,13 +479,20 @@ else
 %         yvar = [WVvarA(1:dendNA(end)); N2varA(1:dendNA(end)); WVvar(1:dendN(end));...
 %         N2var(1:dendN(end))];
         yvar = [smooth(WVvarA(1:dendNA(end)),24); smooth(N2varA(1:dendNA(end)),36);...
-            WVvarT; N2varT]; % ./16 for wv
-%        yvar = [smooth(N2varA(1:dendNA(end)),36); smooth(N2varA(1:dendNA(end)),36);...
-%            WVvarT; N2varT];       
+            WVvarT; N2varT];     
     else
        yvar = [SHerrA(1:dendNA(end)); SNerrA(1:dendNA(end)); SHerr; SNerr];
     end
 end
+
+% Find a priori CN' at height zCNnorm
+fmmrz = find(zN > in.zCNnorm); 
+CNp = ((SNcoadd(fmmrz(1)) - backN) .* zN(fmmrz(1)).^2) ./ (nNz(fmmrz(1))...
+    .* tauR(fmmrz(1)) .* tauN(fmmrz(1)) .* olap(fmmrz(1))); 
+CHp = slope .* CNp; % note slope is in vmr units
+CNpA = ((SNcoaddA(fmmrz(1)) - backNA) .* zN(fmmrz(1)).^2) ./ (nNz(fmmrz(1))...
+    .* tauR(fmmrz(1)) .* tauN(fmmrz(1)) .* olap(fmmrz(1))); 
+CHpA = slopeA .* CNpA; % note slope is in vmr units
 
 % 'wrong A variance'
 % yvar = [Q.SHcoaddA; Q.SNcoaddA; SHerr; SNerr];
@@ -653,8 +621,8 @@ tauNR = tauN./tauR;
 tauHRno = tauHno./tauRno;
 tauNRno = tauNno./tauRno;
 
-lbackNA = polyval(pN,Q.zDATAnA); %Q.backNA; %
-lbackHA = polyval(pH,Q.zDATAnA); %Q.backHA; %
+% lbackNA = polyval(pN,Q.zDATAnA); %Q.backNA; %
+% lbackHA = polyval(pH,Q.zDATAnA); %Q.backHA; %
 Q.wvTrad = in.slope .* (Q.tauH./Q.tauN) .* ((Q.yTrueH - backH)...
     ./(Q.yTrueN - backN));
 Q.wvTradNo = in.slope .* (Q.tauHno(1:dendN(end))...
@@ -663,9 +631,9 @@ Q.wvTradNo = in.slope .* (Q.tauHno(1:dendN(end))...
 Q.wvTradNoA = in.slopeA .* (Q.tauHno(1:dendNA(end))...
     ./ Q.tauNno(1:dendNA(end)))...
     .* ((Q.SHcoaddA - Q.backHA)./(Q.SNcoaddA - Q.backNA));
-lwvTradNoA = in.slopeA .* (Q.tauHno(1:dendNA(end))...
-    ./ Q.tauNno(1:dendNA(end)))...
-    .* ((Q.SHcoaddA - lbackHA)./(Q.SNcoaddA - lbackNA));
+% lwvTradNoA = in.slopeA .* (Q.tauHno(1:dendNA(end))...
+%     ./ Q.tauNno(1:dendNA(end)))...
+%     .* ((Q.SHcoaddA - lbackHA)./(Q.SNcoaddA - lbackNA));
 
 % figure
 % plot(Q.wvTradNo,Q.zDATAn)

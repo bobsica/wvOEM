@@ -17,12 +17,13 @@
 % x(end-1) is H digital background 
 % x(end) is N digital background
 
-date = 20150308;
+date = 20150305;
 nb = '12';
 dextsp = [nb '30'];
-oemStop = 8000; %11000; %8000; %12000; %11000; %7000; % 8000;
-%20150305; %20150308; %20150319; %20130507; %20150318; 20120808; %20130122;
-%20120510; %20130122; %20120717;    %20120717; %20080724 %20120717; %20120510;
+oemStop = 4000; %11000; %8000; %12000; %11000; %7000; % 8000;
+% 0308 8000/11000; 0305 
+oemStopA = 2000; % 0308 5000; 0305 
+
 dataPath = '/Users/BobSica/Dropbox/matlab/matlabWork/fromMCH/ralmodata/';
 outPath = '/Users/BobSica/Dropbox/matlab/matlabWork/fromMCH/ralmoOEMwvOutput/';
 diaryFile = [outPath 'diary' int2str(date) '-' dextsp 'LT.markdown'];
@@ -34,7 +35,6 @@ dext = [nb '30chan2.mat']; % extension for data file
 dexts = [nb '00.mat'];
 fext = [nb '30chan2.fig'];
 gext = [nb '30combined.mat'];
-oemStopA = 5000; %4500; %6000; %3000; 800;
 oemGo = 50; %50;
 oemGoA = 300; %300;
 pieceWise = true;
