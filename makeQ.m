@@ -1,9 +1,18 @@
-function [Q,y,yvar] = makeQ2d0(in)
-% gets RALMO measurement for oem wv retrieval in structure has input data Q
-% has retrieval parameters Y has SH and SN
-% 26 Jun 2015
-% use 4 channels, retrieving
-% retrieving 2*m + 10 parameters 
+function [Q,y,yvar] = makeQ(in)
+% makeQ(in)
+% -Usage-
+%	[Q,y,yvar] = makeQ(in)
+%
+% -Inputs-
+%	in - data structure of parameters passed from oemWV
+%
+% -Outputs-
+%	Q - retrieval input structure
+%   y - n channels of data
+%   yvar - the data's variance
+%
+% currently 4 channels, retrieving 2*m + 10 parameters 
+%
 % x(1:m) is q 
 % x(m+1:2*m) is OD 
 % x(end-9) is analog channel WV lidar constant

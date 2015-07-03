@@ -1,4 +1,16 @@
-function [SHA, SNA, SH , SN] = forwardModelWV2d0(Q,x)
+function [SHA, SNA, SH , SN] = forwardModelWV(Q,x)
+% forwardModelWV - oem forward model for water vapour retrieval
+%
+% -Usage-
+%	[SHA, SNA, SH , SN] = forwardModelWV(Q,x)
+%
+% -Inputs-
+%	Q - retrieval inputs
+%	x - retrieved parameters (see below)
+%
+% -Outputs-
+%	Analog and digital forward models on data grid, H - water vapour, N - N2
+%
 % retrieving 2*m + 10 parameters 
 % x(1:m) is q 
 % x(m+1:2*m) is OD 
@@ -13,7 +25,6 @@ function [SHA, SNA, SH , SN] = forwardModelWV2d0(Q,x)
 % x(end-1) is H digital background 
 % x(end) is N digital background
 
-% retrieved parameters must be on data grid
 m = length(Q.zRET);
 n = 2*m + 10; % q, tau + 2 back + Angstrom + CN
 lambda = 0.3547; lambdaH = 0.40749; lambdaN = 0.38669;

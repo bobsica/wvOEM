@@ -1,47 +1,40 @@
-% version 2d0 (26 Jun 2015): log wvmr retrieval (v6) retrieving q and 
-% "extinction" (v7)
-% and now... using overlap as a b parameter and including dead time
-% hopefully getting constant figured correctly 2 channel
-% use 4 channels, retrieving
-% retrieving 2*m + 10 parameters 
-% x(1:m) is q 
-% x(m+1:2*m) is OD 
-% x(end-9) is analog channel WV lidar constant
-% x(end-8) is analog channel N2 lidar constant
-% x(end-7) is digital channel N2 lidar constant
-% x(end-6) is the Angstrom exponent 
-% x(end-5) is dead time for SH 
-% x(end-4) is dead time for SN
-% x(end-3) is H analog background 
-% x(end-2) is N analog background 
-% x(end-1) is H digital background 
-% x(end) is N digital background
+% wvOEM
+% Optimal Estimation Method applied to water vapour lidar
+% currently specifically for RALMO
+% R. Sica
+% ths version started on github 2 July 2015, with v1.0.0 as of 3 July 2015
 
-date = 20150305;
-nb = '12';
+VERSION = '1-0-0'
+date = 20150308;
+nb = '00';
 dextsp = [nb '30'];
-oemStop = 3500; % 0308 8000/11000; 0305 
-oemStopA = 1000; % 0308 5000; 0305 3500/
+oemStop = 11000; % 0308 8000/11000; 0305 3500
+oemStopA = 5000; % 0308 5000; 0305 1000
+in.LRfree = 50; %25; % 50;
+in.LRpbl = 80; % was 80 for 0308; 25 for 0305
+in.LRtranHeight = 1800; % m, height the above 2 hand off to each other
 
 dataPath = '/Users/BobSica/Dropbox/matlab/matlabWork/fromMCH/ralmodata/';
 outPath = '/Users/BobSica/Dropbox/matlab/matlabWork/fromMCH/ralmoOEMwvOutput/';
-diaryFile = [outPath 'diary' int2str(date) '-' dextsp 'LT.markdown'];
+diaryFile = [outPath 'diary' int2str(date) dextsp 'LT-v' VERSION '.markdown'];
 if exist(diaryFile) ~= 0
     delete(diaryFile);
 end
 diary(diaryFile)
 dext = [nb '30chan2.mat']; % extension for data file
+dextout = [nb '30chan2-v' VERSION '.mat']; % extension for output file with version
 dexts = [nb '00.mat'];
 fext = [nb '30chan2.fig'];
+fextout = [nb '30chan2-v' VERSION '.fig'];
 gext = [nb '30combined.mat'];
 oemGo = 50; %50;
 oemGoA = 300; %300;
 pieceWise = true;
-normStop = 25000;
 deadTimeH = 4; %4.0; % ns
 dfacDeadH = 0.01; % 0308 0.01, 0305 0.001
 dfacDeadN = dfacDeadH; %0.01;
 deadTimeN = 4;
+normStop = 25000;
 aposteriori = false; % if true use a posteriori analog variance
 % varMask = 0; % variance increase
 % maskLow = 100000; %500; % height of low mask
@@ -83,9 +76,6 @@ in.zOEM = oemStop; % 8000; this is where you cut at end of makeQ for retrieval
 in.zOEMA = oemStopA;
 zCNnorm = 3000;
 in.zCNnorm = min(zCNnorm,oemStopA);
-in.LRfree = 25; %25; % 50;
-in.LRpbl = 25; % was 80 for 0308
-in.LRtranHeight = 1800; % m, height the above 2 hand off to each other
 in.beamDiv = 0.09e-3; % mrad
 in.logAlpha = logAlpha; % required to set switch in FM in makeQ9
 in.aposteriori = aposteriori;
@@ -102,10 +92,10 @@ in.dext = dext
 R = []; R.jq = {}; R.ji = {}; iter = 0;
 
 % O, input structure
-O = defOreal;
+O = makeO;
 
 % Q structure
-[Q,y,yvar] = makeQ2d0(in);
+[Q,y,yvar] = makeQ(in);
 Q.logAlpha = logAlpha;
 Q.logWV = logWV;
 Q.DeadTimeH = deadTimeH;
@@ -286,7 +276,7 @@ S_a(n,n) = vars2(n);
 S_ainv = [];
 Seinv = [];
 
-[X,R] = oem(O,Q,R,@Fwv2d0,S_a,Se,S_ainv,Seinv,x_a,y);
+[X,R] = oem(O,Q,R,@makeR,S_a,Se,S_ainv,Seinv,x_a,y);
 if logWV
     X.vmr = exp(X.x(1:m));
 else
@@ -781,11 +771,11 @@ if savedat
     Qwv = Q;
     Xwv = X;
     Rwv = R;
-    save([outPath 'wvDAT' int2str(date) dext], 'Qwv', 'Xwv', 'Rwv')
+    save([outPath 'wvOEM' int2str(date) dextout], 'Qwv', 'Xwv', 'Rwv')
 end
 
 % note this has to redone for optical density save figs
 if savefigs
-    savefig(handfig,[outPath 'wvOEMfigs' int2str(date) fext])
+    savefig(handfig,[outPath 'wvOEM' int2str(date) fextout])
 end
 diary off
