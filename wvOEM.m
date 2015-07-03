@@ -19,7 +19,7 @@ outPath = '/Users/BobSica/Dropbox/matlab/matlabWork/fromMCH/ralmoOEMwvOutput/';
 diaryFile = [outPath 'diary' int2str(date) dextsp 'LT-v' VERSION '.markdown'];
 if exist(diaryFile) ~= 0
     delete(diaryFile);
-end
+end 
 diary(diaryFile)
 dext = [nb '30chan2.mat']; % extension for data file
 dextout = [nb '30chan2-v' VERSION '.mat']; % extension for output file with version
