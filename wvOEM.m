@@ -5,14 +5,15 @@
 % ths version started on github 2 July 2015, with v1.0.0 as of 3 July 2015
 
 VERSION = '1-0-0'
-date = 20150308;
+date = 20150305;
 nb = '00';
 dextsp = [nb '30'];
-oemStop = 11000; % 0308 8000/11000; 0305 3500
-oemStopA = 5000; % 0308 5000; 0305 1000
-in.LRfree = 50; %25; % 50;
-in.LRpbl = 80; % was 80 for 0308; 25 for 0305
-in.LRtranHeight = 1800; % m, height the above 2 hand off to each other
+oemStop = 5000; % 0308 8000/11000; 0305 2500, 5000
+oemStopA = 1200; % 0308 5000; 0305 1500, 1200
+in.LRfree = 50;
+in.LRpbl = 80; 
+in.LRtranHeight = 2200; % m, height the above 2 hand off to each other
+% 1800 0308, 700/2200 0305
 
 dataPath = '/Users/BobSica/Dropbox/matlab/matlabWork/fromMCH/ralmodata/';
 outPath = '/Users/BobSica/Dropbox/matlab/matlabWork/fromMCH/ralmoOEMwvOutput/';
