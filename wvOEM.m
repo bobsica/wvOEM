@@ -4,16 +4,18 @@
 % R. Sica
 % ths version started on github 2 July 2015, with v1.0.0 as of 3 July 2015
 
-VERSION = '1-0-0'
+VERSION = '1-1-0'
 date = 20150305;
-nb = '00';
+nb = '12';
 dextsp = [nb '30'];
-oemStop = 5000; % 0308 8000/11000; 0305 2500, 5000
-oemStopA = 1200; % 0308 5000; 0305 1500, 1200
+oemStop = 2500; % 0308 8000/11000; 0305 2500, 5000
+oemStopA = 1200; % 0308 5000; 0305 1200, 1300
 in.LRfree = 50;
 in.LRpbl = 80; 
-in.LRtranHeight = 2200; % m, height the above 2 hand off to each other
-% 1800 0308, 700/2200 0305
+in.LRtranHeight = 900; % m, height the above 2 hand off to each other
+% 1800 0308, 900/800 0305
+varAV = true;
+% true use variance of average (night) or variance of measurements (day)
 
 dataPath = '/Users/BobSica/Dropbox/matlab/matlabWork/fromMCH/ralmodata/';
 outPath = '/Users/BobSica/Dropbox/matlab/matlabWork/fromMCH/ralmoOEMwvOutput/';
@@ -85,6 +87,7 @@ in.aposteriori = aposteriori;
 % in.maskHigh = maskHigh;
 in.Aoffset = 0; %1.1133e4;
 in.asl = asl;
+in.varAV = varAV;
 in.dexts = dexts;
 in.dextsp = dextsp;
 in.dext = dext
@@ -190,6 +193,7 @@ varDTN = (dfacDeadN.*Q.DeadTimeN).^2;
 %Q.backVarN];
 vars2 = [varlogq; varOD; varCNp; varCNp; varCNp; varAng; varDTH; varDTN;...
     Q.backVarHA; Q.backVarNA; Q.backVarH; Q.backVarN];
+
 dzRET = Q.zRET(2) - Q.zRET(1);
 lc = (round(corrLh ./ dzRET) .* dzRET) .* ones(size(Q.zRET));
 lcalpha = (round(corrLalpha ./ dzRET) .* dzRET) .* ones(size(Q.zRET));

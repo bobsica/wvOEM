@@ -86,14 +86,18 @@ S.cSn2 = (tmpn2./(1-tmpn2.*4e-9)) ./ y2HzRaw;
 zHback = 25e3; zNback = 50e3;
 findBH = find(S.z > zHback);
 backH = mean(S.cSwv(findBH(1):end));
-%backVarH = (std(S.Swv(findBH(1):end)) ./ sqrt(length(S.Swv(findBH(1):end)))).^2;
+
 findBN = find(S.z > zNback);
 backN = mean(S.cSn2(findBN(1):end));
-%backVarN = (std(S.Sn2(findBH(1):end)) ./ sqrt(length(S.Sn2(findBN(1):end)))).^2;
-% 'background variance change for D'
-backVarH = (std(S.cSwv(findBH(1):end))).^2;
-backVarN = (std(S.cSn2(findBN(1):end))).^2;
-    
+% variance of average or measurement
+if in.varAV
+    backVarH = (std(S.cSwv(findBH(1):end)) ./ sqrt(length(S.cSwv(findBH(1):end)))).^2;
+    backVarN = (std(S.cSn2(findBH(1):end)) ./ sqrt(length(S.cSn2(findBN(1):end)))).^2;
+else
+    backVarH = (std(S.cSwv(findBH(1):end))).^2; % variance of measurement
+    backVarN = (std(S.cSn2(findBN(1):end))).^2;
+end
+
 % coadd
 if in.coAddData == 1
     'this needs to be fixed/check'
