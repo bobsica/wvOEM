@@ -82,22 +82,6 @@ S.cSwv = (tmpwv./(1-tmpwv.*4e-9)) ./ y2HzRaw;
 tmpn2 = y2HzRaw .* N2counts;
 S.cSn2 = (tmpn2./(1-tmpn2.*4e-9)) ./ y2HzRaw;
 
-% background now found on (nomially) corrected counts for Digital
-zHback = 25e3; zNback = 50e3;
-findBH = find(S.z > zHback);
-backH = mean(S.cSwv(findBH(1):end));
-
-findBN = find(S.z > zNback);
-backN = mean(S.cSn2(findBN(1):end));
-% variance of average or measurement
-if in.varAV
-    backVarH = (std(S.cSwv(findBH(1):end)) ./ sqrt(length(S.cSwv(findBH(1):end)))).^2;
-    backVarN = (std(S.cSn2(findBH(1):end)) ./ sqrt(length(S.cSn2(findBN(1):end)))).^2;
-else
-    backVarH = (std(S.cSwv(findBH(1):end))).^2; % variance of measurement
-    backVarN = (std(S.cSn2(findBN(1):end))).^2;
-end
-
 % coadd
 if in.coAddData == 1
     'this needs to be fixed/check'
@@ -138,28 +122,48 @@ else
         dgoA = find(zzN >= in.zgoA);
     end
     dstp = find(zzN <= in.zstop);
-    SHcoadd = in.coAddData .* tmpaddH(dgo(1):dstp(end));
-    SNcoadd = in.coAddData .* tmpaddN(dgo(1):dstp(end));
+    SHcoadd = in.coAddData .* tmpaddH;
+    SNcoadd = in.coAddData .* tmpaddN;
     SHcoaddA = in.coAddData .* tmpaddHA;
     SNcoaddA = in.coAddData .* tmpaddNA;
 %     SHerrA = tmpaddHAvar(dgo(1):dstp(end)) .* SHcoaddA(dgo(1):dstp(end));
 %     SNerrA = tmpaddNAvar(dgo(1):dstp(end)) .* SNcoaddA(dgo(1):dstp(end));
     
-    backH = backH .* in.coAddData; backVarH = in.coAddData.^2 .* backVarH;
-    backN = backN .* in.coAddData; backVarN = in.coAddData.^2 .* backVarN;
-    
+%     backH = backH .* in.coAddData; backVarH = in.coAddData.^2 .* backVarH;
+%     backN = backN .* in.coAddData; backVarN = in.coAddData.^2 .* backVarN;
+
+% background and background variance
+    zHback = 50e3; zNback = 50e3;
+    findBH = find(zzN > zHback);
+    backH = mean(SHcoadd(findBH(1):end));
+    findBN = find(zzN > zNback);
+    backN = mean(SNcoadd(findBN(1):end));
+    % variance of average or measurement
+    if in.varAV
+        backVarH = (std(SHcoadd(findBH(1):end)) ...
+            ./ sqrt(length(SHcoadd(findBH(1):end)))).^2;
+        backVarN = (std(SNcoadd(findBH(1):end)) ...
+            ./ sqrt(length(SNcoadd(findBN(1):end)))).^2;
+    else
+        backVarH = (std(SHcoadd(findBH(1):end))).^2; % variance of measurement
+        backVarN = (std(SNcoadd(findBN(1):end))).^2;
+    end
     findBH = find(zzN > zHback);
     backHA = mean(SHcoaddA(findBH(1):end)-in.Aoffset);
-%    backVarHA = (std(SHcoaddA(findBH(1):end)-in.Aoffset)...
-%        ./ sqrt(length(SHcoaddA(findBH(1):end)))).^2;
     findBN = find(zzN > zNback);
     backNA = mean(SNcoaddA(findBN(1):end)-in.Aoffset);
-%     backVarNA = (std(SNcoaddA(findBN(1):end)-in.Aoffset)...
-%         ./ sqrt(length(SNcoaddA(findBN(1):end)))).^2;
-%     'background variance change for A'
-    backVarHA = (std(SHcoaddA(findBH(1):end)-in.Aoffset)).^2;
-    backVarNA = (std(SNcoaddA(findBN(1):end)-in.Aoffset)).^2;
+    if in.varAVA
+        backVarHA = (std(SHcoaddA(findBH(1):end)-in.Aoffset)...
+         ./ sqrt(length(SHcoaddA(findBH(1):end)))).^2;
+        backVarNA = (std(SNcoaddA(findBN(1):end)-in.Aoffset)...
+         ./ sqrt(length(SNcoaddA(findBN(1):end)))).^2;
+    else
+        backVarHA = (std(SHcoaddA(findBH(1):end)-in.Aoffset)).^2;
+        backVarNA = (std(SNcoaddA(findBN(1):end)-in.Aoffset)).^2;
+    end
 
+    SHcoadd = SHcoadd(dgo(1):dstp(end));
+    SNcoadd = SNcoadd(dgo(1):dstp(end));
     SHcoaddA = SHcoaddA(dgoA(1):dstp(end));
     SNcoaddA = SNcoaddA(dgoA(1):dstp(end));
     zN = zzN(dgo(1):dstp(end));
@@ -355,6 +359,8 @@ Q.SNcoadd = SNcoadd(1:dendN(end));
 Q.SHcoadd = SHcoadd(1:dendN(end));
 Q.yTrueN = yTrueN(1:dendN(end));
 Q.yTrueH = yTrueH(1:dendN(end));
+Q.backTH = backTH;
+Q.backTN = backTN;
 
 dgoNA = find(zNA >= in.zgoA);
 dendNA = find(zNA <= in.zOEMA);
@@ -393,7 +399,7 @@ if in.pieceWise
     WVvarA = zeros(size(SHcoaddA));
     N2varA = zeros(size(SNcoaddA));
     WVvarA(go:lzA) = varWVA;
-    WvvarA(1:go-1) = WVvarA(go);
+    WVvarA(1:go-1) = WVvarA(go);
     WVvarA(lzA+1:end) = WVvarA(lzA);
     N2varA(go:lzA) = varN2A;
     N2varA(1:go-1) = N2varA(go);
@@ -401,67 +407,58 @@ if in.pieceWise
     WVvar = zeros(size(SHcoadd));
     N2var = zeros(size(SNcoadd));
     WVvar(go:lzD) = varWV;
-    Wvvar(1:go-1) = WVvar(go);
+    WVvar(1:go-1) = WVvar(go);
     WVvar(lzD+1:end) = WVvar(lzD);
     N2var(go:lzD) = varN2;
     N2var(1:go-1) = N2var(go);
     N2var(lzD+1:end) = N2var(lzD);
 
-    fSH = find(WVvar < backVarH);
-    fSN = find(N2var < backVarN);
-    fSHA = find(WVvarA < backVarHA);
-    fSNA = find(N2varA < backVarNA);
-    WVvar(fSH) = backVarH;
-    N2var(fSN) = backVarN;
-    WVvarA(fSHA) = backVarHA;
-    N2varA(fSNA) = backVarNA;
-    
-    figure
-    semilogx(smooth(WVvarA,24),zNA)
-    hold on
-    semilogx(smooth(N2varA,24),zNA)
-    semilogx(WVvar,zN)
-    semilogx(N2var,zN)
-    semilogx(yTrueH,zN)
-    semilogx(yTrueN,zN)
-    legend('pWVA','pN2A','pWVD','pN2D','SHtrue','SNtrue')
-    title('Piecewise Variance (A/D) + Poisson')
+%     fSH = find(WVvar < backVarH);
+%     fSN = find(N2var < backVarN);
+%     fSHA = find(WVvarA < backVarHA);
+%     fSNA = find(N2varA < backVarNA);
+%' let variance be < background'
+   
 else
 % ad hoc DT error estimate
-    yTrueN1 = (yObsN./(1-yObsN*4.04e-9)) ./ y2Hz;
-    yTrueH1 = (yObsH./(1-yObsH*4.04e-9)) ./ y2Hz;
 
-    trueErrN = (abs(yTrueN1-yTrueN)).^2;
-    trueErrH = (abs(yTrueH1-yTrueH)).^2;
+'dead code!'
+stoooopp
 
-    warning off
-    figure
-    semilogx(Q.yTrueN-backN,Q.zDATAn)
-    hold on
-    semilogx(trueErrN,Q.zDATAn)
-    legend('Signal Variance','DT Variance'); title 'N2 Digital'
-    figure
-    semilogx(Q.yTrueH-backH,Q.zDATAn)
-    hold on
-    semilogx(trueErrH,Q.zDATAn)
-    legend('Signal Variance','DT Variance'); title 'WV Digital'
-    warning on
-
-    fdtN = find(trueErrN > (Q.SNcoadd + backVarN));
-    SNerr(fdtN) = trueErrN(fdtN);
-    fdtH = find(trueErrH > (Q.SHcoadd + backVarH));
-    SHerr(fdtH) = trueErrH(fdtH);
-
-    SHerr = Q.SHcoadd;
-    SNerr = Q.SNcoadd;
-    fSH = find(SHerr < sqrt(backVarH));
-    fSN = find(SNerr < sqrt(backVarN));
-    fSHA = find(SHerrA < sqrt(backVarHA));
-    fSNA = find(SNerrA < sqrt(backVarNA));
-    SHerr(fSH) = backVarH;
-    SNerr(fSN) = backVarN;
-    SHerrA(fSHA) = backVarHA;
-    SNerrA(fSNA) = backVarNA;
+%     yTrueN1 = (yObsN./(1-yObsN*4.04e-9)) ./ y2Hz;
+%     yTrueH1 = (yObsH./(1-yObsH*4.04e-9)) ./ y2Hz;
+% 
+%     trueErrN = (abs(yTrueN1-yTrueN)).^2;
+%     trueErrH = (abs(yTrueH1-yTrueH)).^2;
+% 
+%     warning off
+%     figure
+%     semilogx(Q.yTrueN-backN,Q.zDATAn)
+%     hold on
+%     semilogx(trueErrN,Q.zDATAn)
+%     legend('Signal Variance','DT Variance'); title 'N2 Digital'
+%     figure
+%     semilogx(Q.yTrueH-backH,Q.zDATAn)
+%     hold on
+%     semilogx(trueErrH,Q.zDATAn)
+%     legend('Signal Variance','DT Variance'); title 'WV Digital'
+%     warning on
+% 
+%     fdtN = find(trueErrN > (Q.SNcoadd + backVarN));
+%     SNerr(fdtN) = trueErrN(fdtN);
+%     fdtH = find(trueErrH > (Q.SHcoadd + backVarH));
+%     SHerr(fdtH) = trueErrH(fdtH);
+% 
+%     SHerr = Q.SHcoadd;
+%     SNerr = Q.SNcoadd;
+%     fSH = find(SHerr < sqrt(backVarH));
+%     fSN = find(SNerr < sqrt(backVarN));
+%     fSHA = find(SHerrA < sqrt(backVarHA));
+%     fSNA = find(SNerrA < sqrt(backVarNA));
+%     SHerr(fSH) = backVarH;
+%     SNerr(fSN) = backVarN;
+%     SHerrA(fSHA) = backVarHA;
+%     SNerrA(fSNA) = backVarNA;
 end
 
 % use a posteriori analog variance, but either way apply covariance mask
@@ -472,31 +469,46 @@ if in.aposteriori
     yvar = [WVvarA(1:dendNA(end)); N2varA(1:dendNA(end)); WVvar(1:dendN(end));...
        N2var(1:dendN(end))];   
 else
-% can't have a 0 variance
-    f00 = find(WVvarA <= 0);
+% can't have a 0 variance or variance < background
+    f00 = find(WVvarA < backVarHA);
     WVvarA(f00) = backVarHA;
-    f00 = find(N2varA <= 0);
+    f00 = find(N2varA < backVarNA);
     N2varA(f00) = backVarNA;
-    f00 = find(WVvar <= 0);
+    f00 = find(WVvar < backVarH);
     WVvar(f00) = backVarH;
-    f00 = find(N2var <= 0);
+    f00 = find(N2var < backVarN);
     N2var(f00) = backVarN;
-    WVvarT = Q.yTrueH;
-    f00 = find(WVvarT <= 0);
+    WVvarT = yTrueH;
+    f00 = find(WVvarT <= backVarH);
     WVvarT(f00) = backVarH;
-    N2varT = Q.yTrueN;
-    f00 = find(N2varT <= 0);
+    N2varT = yTrueN;
+    f00 = find(N2varT <= backVarH);
     N2varT(f00) = backVarN;
     
     if in.pieceWise
-%         yvar = [WVvarA(1:dendNA(end)); N2varA(1:dendNA(end)); WVvar(1:dendN(end));...
-%         N2var(1:dendN(end))];
-        yvar = [smooth(WVvarA(1:dendNA(end)),24); smooth(N2varA(1:dendNA(end)),36);...
-            WVvarT; N2varT];     
+%        yvar = [WVvarA(1:dendNA(end)); N2varA(1:dendNA(end)); WVvar(1:dendN(end));...
+%        N2var(1:dendN(end))];
+       yvar = [WVvarA(1:dendNA(end)); N2varA(1:dendNA(end)); WVvarT(1:dendN(end));...
+       N2varT(1:dendN(end))];
+%        yvar = [smooth(WVvarA(1:dendNA(end)),24); smooth(N2varA(1:dendNA(end)),36);...
+%            WVvarT; N2varT];     
     else
+        'dead code II'
+        stooop
        yvar = [SHerrA(1:dendNA(end)); SNerrA(1:dendNA(end)); SHerr; SNerr];
     end
 end
+
+figure
+semilogx(WVvarA,zNA)
+hold on
+semilogx(WVvarT,zN)
+semilogx(yTrueH,zN)
+semilogx(N2varA,zNA)
+semilogx(N2var,zN)
+semilogx(yTrueN,zN)
+legend('pWVA','WVvar','SHtrue','pN2A','N2var','SNtrue')
+title('Piecewise Variance (A/D) + Poisson')
 
 % Find a priori CN' at height zCNnorm
 fmmrz = find(zN > in.zCNnorm); 
@@ -504,19 +516,22 @@ CNp = ((SNcoadd(fmmrz(1)) - backN) .* zN(fmmrz(1)).^2) ./ (nNz(fmmrz(1))...
     .* tauR(fmmrz(1)) .* tauN(fmmrz(1)) .* olap(fmmrz(1))); 
 CHp = slope .* CNp; % note slope is in vmr units
 CNpA = ((SNcoaddA(fmmrz(1)) - backNA) .* zN(fmmrz(1)).^2) ./ (nNz(fmmrz(1))...
-    .* tauR(fmmrz(1)) .* tauN(fmmrz(1)) .* olap(fmmrz(1))); 
+    .* tauR(fmmrz(1)) .* tauN(fmmrz(1)) .* olap(fmmrz(1)));
+%CHpA = ((SHcoaddA(fmmrz(1)) - backHA) .* zN(fmmrz(1)).^2) ./ (nNz(fmmrz(1))...
+%    .* tauR(fmmrz(1)) .* tauH(fmmrz(1)) .* olap(fmmrz(1)));
 CHpA = slopeA .* CNpA; % note slope is in vmr units
 
 % 'wrong A variance'
 % yvar = [Q.SHcoaddA; Q.SNcoaddA; SHerr; SNerr];
-Q.CNp = CNp;
 Q.CNpA = CNpA;
+Q.CHpA = CHpA; %slope .* CNpA;
+Q.CNp = CNp;
 Q.slope = slope;
 Q.slopeA = slopeA;
 Q.CHp = slope .* CNp;
 % note this slope is fixed in makeRealWVlog like: 
 %CHp = (0.781.*x(end-2).*1000.*Q.mWV) ./ (Q.slope(mmr).*Q.mAir);
-Q.CHpA = slope .* CNpA;
+
 Q.olap = olap(1:dendN(end));
 Q.olapA = interp1(zN,olap,Q.zDATAnA,'linear');
 %Q.olapD = olapD(1:dendN(end));
@@ -636,11 +651,11 @@ tauNRno = tauNno./tauRno;
 
 % lbackNA = polyval(pN,Q.zDATAnA); %Q.backNA; %
 % lbackHA = polyval(pH,Q.zDATAnA); %Q.backHA; %
-Q.wvTrad = in.slope .* (Q.tauH./Q.tauN) .* ((Q.yTrueH - backH)...
-    ./(Q.yTrueN - backN));
+Q.wvTrad = in.slope .* (Q.tauH./Q.tauN) .* ((Q.yTrueH - Q.backTH)...
+    ./(Q.yTrueN - Q.backTN));
 Q.wvTradNo = in.slope .* (Q.tauHno(1:dendN(end))...
     ./ Q.tauNno(1:dendN(end)))...
-    .* ((Q.yTrueH - backH)./(Q.yTrueN - backN));
+    .* ((Q.yTrueH - Q.backTH)./(Q.yTrueN - Q.backTN));
 Q.wvTradNoA = in.slopeA .* (Q.tauHno(1:dendNA(end))...
     ./ Q.tauNno(1:dendNA(end)))...
     .* ((Q.SHcoaddA - Q.backHA)./(Q.SNcoaddA - Q.backNA));
