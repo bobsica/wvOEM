@@ -68,8 +68,8 @@ SNtrue = Q.olap.*CNp./Q.zDATAn.^2 .* (Q.nN.*tauR.*tauN); % + x(end);
 
 % dead time correction
 SHHz = Q.y2Hz .* SHtrue;
-SH = SHtrue.*exp(-SHHz.*x(end-5).*1e-9) + x(end-1); 
+SH = SHtrue .* exp(-SHHz.*x(end-5).*1e-9) + exp(x(end-1)); 
 SNHz = Q.y2Hz .* SNtrue;
-SN = SNtrue .*exp(-SNHz.*x(end-4).*1e-9) + x(end);
+SN = SNtrue .* exp(-SNHz.*x(end-4).*1e-9) + exp(x(end));
 
 return
