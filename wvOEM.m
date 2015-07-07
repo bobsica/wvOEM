@@ -198,12 +198,14 @@ varDiv = (dfacDiv*Q.beamDiv).^2;
 varTheta = (dfacTheta.*Q.Theta).^2;
 varDTH = (dfacDeadH.*Q.DeadTimeH).^2;
 varDTN = (dfacDeadN.*Q.DeadTimeN).^2;
+varHdig = Q.backVarH./(Q.backH.^2);
+varNdig = Q.backVarN./(Q.backN.^2);
 
 %'reducing background variance by 0.1/0.1' vars2 = [varlogq; varAlpha;
 %varDT; Q.backVarH; Q.backVarN]; vars2 = [varlogq; varAlpha; Q.backVarH;
 %Q.backVarN];
 vars2 = [varlogq; varOD; varCHp; varCNp; varCNp; varAng; varDTH; varDTN;...
-     Q.backVarHA; Q.backVarNA; Q.backVarH; Q.backVarN];
+     Q.backVarHA; Q.backVarNA; varHdig; varNdig];
 
 dzRET = Q.zRET(2) - Q.zRET(1);
 lc = (round(corrLh ./ dzRET) .* dzRET) .* ones(size(Q.zRET));
