@@ -2,19 +2,27 @@
 % Optimal Estimation Method applied to water vapour lidar
 % currently specifically for RALMO
 % R. Sica
-% ths version started on github 2 July 2015, with v1.0.0 as of 3 July 2015
+% this version started on github 2 July 2015, with v1.0.0 as of 3 July 2015
+%
+% v1.0.1: flag to control how background is calculated.
+% v1.1.1: backgrounds are calculated from uncorrected data; also measurement
+% variance is allowed to be < background variance. New flag for which background
+% variance to use for analog as well as digital channel.
 
 VERSION = '1-1-0'
-date = 20150305;
-nb = '12';
+%0305 12: 3000, 1200, 20, 80, 1750, true, true
+%0305 00: 5000, 1300, 20, 80, 1600, true, true
+date = 20150308;
+nb = '00';
 dextsp = [nb '30'];
-oemStop = 2500; % 0308 8000/11000; 0305 2500, 5000
-oemStopA = 1200; % 0308 5000; 0305 1200, 1300
-in.LRfree = 50;
+oemStop = 11000; % 0308 8000/11000; 0305 2500, 5000
+oemStopA = 5000; % 0308 5000; 0305 1200, 1300
+in.LRfree = 50; % was 20 on 0305
 in.LRpbl = 80; 
-in.LRtranHeight = 900; % m, height the above 2 hand off to each other
+in.LRtranHeight = 1800; % m, height the above 2 hand off to each other
 % 1800 0308, 900/800 0305
 varAV = true;
+varAVA = false;
 % true use variance of average (night) or variance of measurements (day)
 
 dataPath = '/Users/BobSica/Dropbox/matlab/matlabWork/fromMCH/ralmodata/';
@@ -65,8 +73,8 @@ oemPath = './'; % for saving plots
 in.pieceWise = pieceWise;
 in.date = date;
 in.slope = 37.88;
-in.slopeA = in.slope ./ 2.75; % ad hoc factor 3.1096; %./ 2.569 (night); 
-%./ 3.1096 (day)
+in.slopeA = in.slope ./ 3; % 3 is nominal, not accurate 2.75; 
+% ad hoc factor 3.1096; %./ 2.569 (night); ./ 3.1096 (day)
 % .* (2.76/2*0.9); % ad hoc correction until I get the correct number;
 % units are g/kg, slope is corrected to vmr in makeRealWVlog
 in.coRET = 2; % 2, was 3, this coadds retrieval grid
@@ -88,6 +96,7 @@ in.aposteriori = aposteriori;
 in.Aoffset = 0; %1.1133e4;
 in.asl = asl;
 in.varAV = varAV;
+in.varAVA = varAVA;
 in.dexts = dexts;
 in.dextsp = dextsp;
 in.dext = dext
@@ -133,7 +142,7 @@ else
 end
 
 x_a = [x1; x2; log(Q.CHpA); log(Q.CNpA); log(Q.CNp); Q.Ang; Q.DeadTimeH; Q.DeadTimeN;...
-    Q.backHA; Q.backNA; Q.backH; Q.backN];
+    Q.backHA; Q.backNA; log(Q.backH); log(Q.backN)];
 
 % Covariances
 % yvar(1:2*mchan) = 1000*yvar(1:2*mchan);
@@ -155,7 +164,8 @@ dfacSlope = 0.05;
 dfacAlpha = 0.1; %0.5;
 dfacOD = 0.20;
 dfacAng = 0.01; % 0.05
-dfacCNp = 0.25; % was 0.25;
+dfacCNp = 0.1; % was 0.25;
+dfacCHp = 0.5; 
 dfacOlap = 0.01;
 
 if logWV
@@ -181,6 +191,7 @@ end
 varOla = (dfacOlap.*Q.olap).^2;
 varOlap = [varOla; varOla]; % for 2*m retrieval parameters for Solap
 varCNp = dfacCNp.^2; %(dfacCNp .* Q.CNp).^2;
+varCHp = dfacCHp.^2; %(dfacCNp .* Q.CNp).^2;
 varAng = (dfacAng .* Q.Ang).^2;
 varDiv = (dfacDiv*Q.beamDiv).^2;
 %varcoefs = (dfacCoefs.*Q.coefs).^2;
@@ -191,8 +202,8 @@ varDTN = (dfacDeadN.*Q.DeadTimeN).^2;
 %'reducing background variance by 0.1/0.1' vars2 = [varlogq; varAlpha;
 %varDT; Q.backVarH; Q.backVarN]; vars2 = [varlogq; varAlpha; Q.backVarH;
 %Q.backVarN];
-vars2 = [varlogq; varOD; varCNp; varCNp; varCNp; varAng; varDTH; varDTN;...
-    Q.backVarHA; Q.backVarNA; Q.backVarH; Q.backVarN];
+vars2 = [varlogq; varOD; varCHp; varCNp; varCNp; varAng; varDTH; varDTN;...
+     Q.backVarHA; Q.backVarNA; Q.backVarH; Q.backVarN];
 
 dzRET = Q.zRET(2) - Q.zRET(1);
 lc = (round(corrLh ./ dzRET) .* dzRET) .* ones(size(Q.zRET));
@@ -315,15 +326,15 @@ str = ['Change in N2 analog background term from ', num2str(outB(1),'%0.5g'),...
 disp(str)
 
 disp(' ')
-outB =[Q.backH X.x(end-1) (X.x(end-1)-Q.backH)/Q.backH*100];
+outB =[Q.backH exp(X.x(end-1)) (exp(X.x(end-1))-Q.backH)/Q.backH*100];
 str = ['Change in H2O digital background term from ', num2str(outB(1),'%0.5g'),...
-    ' to ',num2str(outB(2),'%0.5g'),' +/- ',num2str(X.e(end-1),'%0.5g')];
+    ' to ',num2str(outB(2),'%0.5g'),' +/- ',num2str(X.e(end-1)*100,'%0.5g'), ' %'];
 disp(str)
 
 disp(' ')
-outB =[Q.backN X.x(end) (X.x(end)-Q.backN)/Q.backN*100];
+outB =[Q.backN exp(X.x(end)) (exp(X.x(end))-Q.backN)/Q.backN*100];
 str = ['Change in N2 digital background term from ', num2str(outB(1),'%0.5g'),...
-    ' to ',num2str(outB(2),'%0.5g'),' +/- ',num2str(X.e(end),'%0.5g')];
+    ' to ',num2str(outB(2),'%0.5g'),' +/- ',num2str(X.e(end)*100,'%0.5g'),' %'];
 disp(str)
 
 disp(' ')
