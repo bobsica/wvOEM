@@ -12,17 +12,17 @@
 VERSION = '1-1-0'
 %0305 12: 3000, 1200, 20, 80, 1750, true, true
 %0305 00: 5000, 1300, 20, 80, 1600, true, true
-date = 20150308;
+date = 20150305;
 nb = '00';
 dextsp = [nb '30'];
-oemStop = 11000; % 0308 8000/11000; 0305 2500, 5000
-oemStopA = 5000; % 0308 5000; 0305 1200, 1300
-in.LRfree = 50; % was 20 on 0305
+oemStop = 5000; % 0308 8000/11000; 0305 2500, 5000
+oemStopA = 1300; % 0308 5000; 0305 1200, 1300
+in.LRfree = 20; % was 20 on 0305
 in.LRpbl = 80; 
-in.LRtranHeight = 1800; % m, height the above 2 hand off to each other
+in.LRtranHeight = 800; % m, height the above 2 hand off to each other
 % 1800 0308, 900/800 0305
 varAV = true;
-varAVA = false;
+varAVA = false; % was f
 % true use variance of average (night) or variance of measurements (day)
 
 dataPath = '/Users/BobSica/Dropbox/matlab/matlabWork/fromMCH/ralmodata/';
