@@ -12,15 +12,15 @@
 VERSION = '1-1-0'
 %0305 12: 3000, 1200, 20, 80, 1750, true, true
 %0305 00: 5000, 1300, 20, 80, 1600, true, true
-date = 20150305;
-nb = '00';
+date = 20090905; %20150305;
+nb = '12';
 dextsp = [nb '30'];
-oemStop = 5000; % 0308 8000/11000; 0305 2500, 5000
-oemStopA = 1300; % 0308 5000; 0305 1200, 1300
-in.LRfree = 20; % was 20 on 0305
+oemStop = 6000; %14000; % 0308 8000/11000; 0305 2500, 5000; 200906 - 14000 200905 6000
+oemStopA = 3000; %5000; % 0308 5000; 0305 1200, 1300; 200906 - 5000, 200905 3000 day
+in.LRfree = 50; % was 20 on 0305, 0308 50, 200905-6 50
 in.LRpbl = 80; 
-in.LRtranHeight = 800; % m, height the above 2 hand off to each other
-% 1800 0308, 900/800 0305
+in.LRtranHeight = 1500; %2500; % m, height the above 2 hand off to each other
+% 1800 0308, 900/800 0305; 200906 - 1500, 200905 1800
 varAV = true;
 varAVA = false; % was f
 % true use variance of average (night) or variance of measurements (day)
@@ -38,8 +38,8 @@ dexts = [nb '00.mat'];
 fext = [nb '30chan2.fig'];
 fextout = [nb '30chan2-v' VERSION '.fig'];
 gext = [nb '30combined.mat'];
-oemGo = 50; %50;
-oemGoA = 300; %300;
+oemGo = 50; %50; %50;
+oemGoA = 100; %300;
 pieceWise = true;
 deadTimeH = 4; %4.0; % ns
 dfacDeadH = 0.01; % 0308 0.01, 0305 0.001
@@ -65,8 +65,8 @@ logWV = true;
 cf = 3; %tent function on covariance
 mAir = 28.966;
 mWV = 18.02;
-corrLh = 100;
-corrLalpha = 100; % 500 100 2000
+corrLh = 84; %100;
+corrLalpha = 84; %100 ; % 500 100 2000
 oemPath = './'; % for saving plots
 
 % inputs for ralmo data
@@ -162,7 +162,7 @@ dfacDiv = 0.1; %0.1;
 dfacTheta = 0.1; %0.1;
 dfacSlope = 0.05;
 dfacAlpha = 0.1; %0.5;
-dfacOD = 0.20;
+dfacOD = 0.25; %0.20;
 dfacAng = 0.01; % 0.05
 dfacCNp = 0.1; % was 0.25;
 dfacCHp = 0.5; 
@@ -311,8 +311,8 @@ if logAlpha
     xaAlpha = exp(x_a(m+1:2*m) + Q.odnormR);
     xAlpha = exp(X.x(m+1:2*m) + Q.odnormR);
 else
-    xaAlpha = x_a(m+1:2*m) + Q.odnormR;
-    xAlpha = X.x(m+1:2*m) + Q.odnormR;
+    xaAlpha = x_a(m+1:2*m); % done in makeQ + Q.odnormR (from ground to start);
+    xAlpha = X.x(m+1:2*m); % + Q.odnormR;
 end
 
 disp(' ')
@@ -611,9 +611,9 @@ else
 %    semilogx(x_a(mbL:mbH).*1000.*(mWV./mAir),Q.zRET(mbL:mbH)./1000); % was
 %    ./(mAir ./ mWV)
 end
-semilogx(Q.wvTradNoA,Q.zDATAnA./1000,'go:');
+semilogx(Q.wvTradNoA,Q.zDATAnA./1000,'yo:');
 semilogx(Q.wvTradNo,Q.zDATAn./1000,'cx:');
-semilogx(Q.mmrSnd,Q.zsnd./1000,'y');
+semilogx(Q.mmrSnd,Q.zsnd./1000,'g');
 semilogx(Q.qvTrueRET(mbL:mbH).*1000.*(mWV./mAir),Q.zRET(mbL:mbH)./1000,'k-.');
 
 warning off

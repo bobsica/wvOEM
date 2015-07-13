@@ -298,13 +298,13 @@ alphaAer(znoAer) = 0;
 %alphaAer = 1e-5.*ones(size(zN)); alphaAer = alphaAer./10; alphaCorErr =
 %((sdasrCor./asrCor).*alpha_mol_DATA); % estimate of background SD
 alphaCorErr = 0;
-z0 = [0:.01:zN(1)];
+z0 = [0:.1:zN(1)];
 alpha0 = alphaAer(1) .* ones(size(z0));
 odnorm = trapz(z0,alpha0);
-odAer = cumtrapz(zN,alphaAer); % note in v11 we don't include the bit from the
+odAer = cumtrapz(zN,alphaAer) + odnorm; % note in v11 we don't include the bit from the
 % ground up in odAer, it is in the retrieved "C*tau"
-odAerH = cumtrapz(zN,alphaAer.*lambda./lambdaH);
-odAerN = cumtrapz(zN,alphaAer.*lambda./lambdaN);
+odAerH = cumtrapz(zN,alphaAer.*lambda./lambdaH) + odnorm;
+odAerN = cumtrapz(zN,alphaAer.*lambda./lambdaN) + odnorm;
 figure
 subplot(2,1,1)
 plot(asrDATAs,zN./1000)
