@@ -31,7 +31,6 @@ function [R,yf,J]  = makeR(Q, R, x, iter)
 % x(end) is N digital background
 
 m = length(Q.zRET);
-
 [SHA,SNA,SH,SN] = forwardModelWV(Q,x);
 
 if ~isempty(find(isnan(x)) == 1)
@@ -104,8 +103,8 @@ dSHdz = -(SH - Q.backH) ./ Q.zDATAn;
 dSNdz = -(SN - Q.backN) ./ Q.zDATAn;
 dSHdzA = -(SHA - Q.backHA) ./ Q.zDATAnA;
 dSNdzA = -(SNA - Q.backNA) ./ Q.zDATAnA;
-dOlap = derivative(Q.olap)./derivative(Q.zDATAn);
-dOlapA = derivative(Q.olapA)./derivative(Q.zDATAnA);
+dOlap = Q.olapD;
+dOlapA = Q.olapDA ;
 dzdo = 1./dOlap;
 ff = find(isinf(dzdo));
 dzdo(ff) = 0;
@@ -220,5 +219,11 @@ R.KslopeA = KslopeA;
 R.KolapA = KolapA;
 
 J = Kernel;
+
+if ~isempty(find(isnan(J)) == 1)
+    'after FM: Nans in kernel (FMwv(n).m)'
+    iter
+    dbstop in makeR at 226
+end
 
 return

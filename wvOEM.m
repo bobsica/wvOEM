@@ -9,18 +9,19 @@
 % variance is allowed to be < background variance. New flag for which background
 % variance to use for analog as well as digital channel.
 
-VERSION = '1-1-0'
+VERSION = '1-2-0'
 %0305 12: 3000, 1200, 20, 80, 1750, true, true
 %0305 00: 5000, 1300, 20, 80, 1600, true, true
 date = 20090905; %20150305;
 nb = '12';
 dextsp = [nb '30'];
-oemStop = 6000; %14000; % 0308 8000/11000; 0305 2500, 5000; 200906 - 14000 200905 6000
+oemStop = 5000; %14000; % 0308 8000/11000; 0305 2500, 5000; 200906 - 14000 200905 6000
 oemStopA = 3000; %5000; % 0308 5000; 0305 1200, 1300; 200906 - 5000, 200905 3000 day
 in.LRfree = 50; % was 20 on 0305, 0308 50, 200905-6 50
 in.LRpbl = 80; 
 in.LRtranHeight = 1500; %2500; % m, height the above 2 hand off to each other
-% 1800 0308, 900/800 0305; 200906 - 1500, 200905 1800
+% 1800 0308, 900/800 0305; 200906 - 2300, 200905 1800
+oStretch = 1; % stretch or shrink overlap
 varAV = true;
 varAVA = false; % was f
 % true use variance of average (night) or variance of measurements (day)
@@ -38,8 +39,10 @@ dexts = [nb '00.mat'];
 fext = [nb '30chan2.fig'];
 fextout = [nb '30chan2-v' VERSION '.fig'];
 gext = [nb '30combined.mat'];
-oemGo = 50; %50; %50;
-oemGoA = 100; %300;
+oemGo = 1000; %50; %50;
+oemGoAreal = 50; % 60; 300;
+zAoffset = 38; % make dig and anal heights agree
+oemGoA = oemGoAreal + zAoffset;
 pieceWise = true;
 deadTimeH = 4; %4.0; % ns
 dfacDeadH = 0.01; % 0308 0.01, 0305 0.001
@@ -65,8 +68,8 @@ logWV = true;
 cf = 3; %tent function on covariance
 mAir = 28.966;
 mWV = 18.02;
-corrLh = 84; %100;
-corrLalpha = 84; %100 ; % 500 100 2000
+corrLh = 84 %100;
+corrLalpha = 84 %100 ; % 500 100 2000
 oemPath = './'; % for saving plots
 
 % inputs for ralmo data
@@ -87,7 +90,7 @@ in.zOEM = oemStop; % 8000; this is where you cut at end of makeQ for retrieval
 in.zOEMA = oemStopA;
 zCNnorm = 3000;
 in.zCNnorm = min(zCNnorm,oemStopA);
-in.beamDiv = 0.09e-3; % mrad
+%in.beamDiv = 0.09e-3; % mrad
 in.logAlpha = logAlpha; % required to set switch in FM in makeQ9
 in.aposteriori = aposteriori;
 % in.varMask = varMask;
@@ -99,6 +102,8 @@ in.varAV = varAV;
 in.varAVA = varAVA;
 in.dexts = dexts;
 in.dextsp = dextsp;
+in.oStretch = oStretch;
+in.zAoffset = zAoffset;
 in.dext = dext
 
 % initialize R, retrieval structure, for Q.pack, though we don't use this
@@ -157,12 +162,12 @@ dfacSigmaR = 0.003; % ISSI recommend
 dfacSigRamH = 0.1; 
 % from Inaba and Kobayasi, but these would be the slope variance if known
 dfacSigRamN = 0.1;
-dfacDiv = 0.1; %0.1;
+%dfacDiv = 0.1; %0.1;
 %dfacCoefs = 0.1; % 05;
-dfacTheta = 0.1; %0.1;
+%dfacTheta = 0.1; %0.1;
 dfacSlope = 0.05;
 dfacAlpha = 0.1; %0.5;
-dfacOD = 0.25; %0.20;
+dfacOD = 0.5; % 0.25, 0.20;
 dfacAng = 0.01; % 0.05
 dfacCNp = 0.1; % was 0.25;
 dfacCHp = 0.5; 
@@ -193,9 +198,9 @@ varOlap = [varOla; varOla]; % for 2*m retrieval parameters for Solap
 varCNp = dfacCNp.^2; %(dfacCNp .* Q.CNp).^2;
 varCHp = dfacCHp.^2; %(dfacCNp .* Q.CNp).^2;
 varAng = (dfacAng .* Q.Ang).^2;
-varDiv = (dfacDiv*Q.beamDiv).^2;
+%varDiv = (dfacDiv*Q.beamDiv).^2;
 %varcoefs = (dfacCoefs.*Q.coefs).^2;
-varTheta = (dfacTheta.*Q.Theta).^2;
+%varTheta = (dfacTheta.*Q.Theta).^2;
 varDTH = (dfacDeadH.*Q.DeadTimeH).^2;
 varDTN = (dfacDeadN.*Q.DeadTimeN).^2;
 varHdig = Q.backVarH./(Q.backH.^2);
@@ -381,9 +386,9 @@ str = ['Change in N2 dead time from ', num2str(outB(1),'%0.5g'), ' to ',...
 disp(str)
 
 % remove retrieval points outside of data grid
-mbLo = find(Q.zRET < Q.zDATAn(1));
-mbHi = find(Q.zRET > Q.zDATAn(end));
-mbH = mbHi(1) - 1;
+mbLo = find(Q.zRET < min(Q.zDATAnA(1),Q.zDATAn(1)));
+mbHi = find(Q.zRET > max(Q.zDATAnA(end),Q.zDATAn(end)));
+mbH = mbHi(1);% - 1;
 mbL = mbLo(end) + 1;
 mbH2 = m - mbH;
 
@@ -657,20 +662,20 @@ pltx = get(gca,'XLim');
 plot(pltx,[Q.zRET(fini) Q.zRET(fini)]./1000,'k--')
 
 subplot(1,2,2)
-xaAlphaD = interp1(Q.zRET(mbL:mbH),xaAlpha(mbL:mbH),Q.zDATAn,'linear');
-plot(Q.tauRno.*exp(-xaAlphaD),Q.zDATAn./1000)
+plot(exp(-xaAlpha(mbL:mbH)),Q.zRET(mbL:mbH)./1000)
 hold on
-xAlphaD = interp1(Q.zRET(mbL:mbH),xAlpha(mbL:mbH),Q.zDATAn,'linear');
-plot(Q.tauRno.*exp(-xAlphaD),Q.zDATAn./1000)
-%xlabel('Aerosol Extinction (10^6 m^{-1})')
+plot(exp(-xAlpha(mbL:mbH)),Q.zRET(mbL:mbH)./1000)
+plot(Q.tauRnoA,Q.zDATAnA./1000,'g')
 xlabel('Transmission at 355 nm')
 ylabel('Altitude (km)')
-legend('a priori','Retrieval')
-hold on
+legend('aerosol: a priori','aersol: Retrieval','molecular')
+plot(Q.tauRno,Q.zDATAn./1000,'g')
 pltx = get(gca,'XLim');
 plot(pltx,[Q.zRET(fini) Q.zRET(fini)]./1000,'k--')
 
 handfig(7) = figure;
+xaAlphaD = interp1(Q.zRET(mbL:mbH),xaAlpha(mbL:mbH),Q.zDATAn,'linear');
+xAlphaD = interp1(Q.zRET(mbL:mbH),xAlpha(mbL:mbH),Q.zDATAn,'linear');
 alp = derivative(xAlphaD(3:end-2))./derivative(Q.zDATAn(3:end-2));
 alpR = derivative(-log(Q.tauRno))./derivative(Q.zDATAn);
 salp = smooth(alp,10);

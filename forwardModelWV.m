@@ -47,9 +47,9 @@ end
 tauR = Q.tauRno .* exp(-ODj);
 tauH = Q.tauHno .* exp(-(ODj.*(lambdaH./lambda).^-x(end-6)));
 tauN = Q.tauNno .* exp(-(ODj.*(lambdaN./lambda).^-x(end-6)));
-Q.tauR4J = tauR;
-Q.tauH4J = tauH;
-Q.tauN4J = tauN;
+% Q.tauR4J = tauR;
+% Q.tauH4J = tauH;
+% Q.tauN4J = tauN;
 tauRA = Q.tauRnoA .* exp(-ODjA);
 tauHA = Q.tauHnoA .* exp(-(ODjA.*(lambdaH./lambda).^-x(end-6)));
 tauNA = Q.tauNnoA .* exp(-(ODjA.*(lambdaN./lambda).^-x(end-6)));
@@ -71,5 +71,10 @@ SHHz = Q.y2Hz .* SHtrue;
 SH = SHtrue .* exp(-SHHz.*x(end-5).*1e-9) + exp(x(end-1)); 
 SNHz = Q.y2Hz .* SNtrue;
 SN = SNtrue .* exp(-SNHz.*x(end-4).*1e-9) + exp(x(end));
+
+if ~isempty(find(isnan(SN) == 1) | find(isnan(SNA) == 1))
+    'in forwardModel: Nans in FM'
+    dbstop in forwardModelWV at 78
+end
 
 return

@@ -3,6 +3,11 @@ function [dSHdxA,dSNdxA,dSHdx,dSNdx] = derivSHSN2(Q,x,j,theFM)
 
 [SHA, SNA, SH, SN] = theFM(Q,x);
 
+if ~isempty(find(isnan(x)) == 1)
+    'after FM: Nans in retrieval vector derivSHSN2'
+    stop
+end
+
 dn = 1.e-4 .* x(j); % 1e-5
 xpert = x;
 if x(j) == 0 % trap for tau's where tau(1) = 0
