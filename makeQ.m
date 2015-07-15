@@ -272,11 +272,11 @@ load(molePath);
 beta_mol_DATA = interp1(alphaBeta.z-in.asl,alphaBeta.beta_mol,zN,'linear');
 alpha_mol_DATA = interp1(alphaBeta.z-in.asl,alphaBeta.alpha_mol,zN,'linear');
 
-'below asr max use asr max value (3000 m max)'
-fcut = find(asr.z < 3000);
-[amx,imx] = max(asr.asr(fcut));
-fasrMasr = find(asr.z < asr.z(imx));
-asr.asr(fasrMasr) = amx; 
+% 'below asr max use asr max value (3000 m max)'
+% fcut = find(asr.z < 3000);
+% [amx,imx] = max(asr.asr(fcut));
+% fasrMasr = find(asr.z < asr.z(imx));
+% asr.asr(fasrMasr) = amx; 
 
 asrDATA = interp1(asr.z,asr.asr,zN,'linear');
 beta_mol_DATAA = interp1(alphaBeta.z-in.asl,alphaBeta.beta_mol,zNA,'linear');
@@ -573,7 +573,7 @@ end
 figure
 semilogx(WVvarA,zNA)
 hold on
-semilogx(WVvarT,zN)
+semilogx(WVvarT,zN,'.')
 semilogx(yTrueH,zN)
 semilogx(N2varA,zNA)
 semilogx(N2var,zN)

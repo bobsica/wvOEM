@@ -12,15 +12,17 @@
 VERSION = '1-2-0'
 %0305 12: 3000, 1200, 20, 80, 1750, true, true
 %0305 00: 5000, 1300, 20, 80, 1600, true, true
-date = 20090905; %20150305;
-nb = '12';
+date = 20090906; %20150305;20090905 (noon), 0906 (midnight)
+nb = '00';
 dextsp = [nb '30'];
-oemStop = 5000; %14000; % 0308 8000/11000; 0305 2500, 5000; 200906 - 14000 200905 6000
-oemStopA = 3000; %5000; % 0308 5000; 0305 1200, 1300; 200906 - 5000, 200905 3000 day
+%14000; % 0308 8000/11000; 0305 2500 (day), 5000; 200906 - 14000 200905 7000
+oemStop = 14000; 
+%5000; % 0308 5000; 0305 1300, 1300 (night); 200906 - 5000, 200905 3500 day
+oemStopA = 5000; 
 in.LRfree = 50; % was 20 on 0305, 0308 50, 200905-6 50
-in.LRpbl = 80; 
-in.LRtranHeight = 1500; %2500; % m, height the above 2 hand off to each other
-% 1800 0308, 900/800 0305; 200906 - 2300, 200905 1800
+in.LRpbl = 80; % 50 on 0305; was 80 on otherwise
+in.LRtranHeight = 2300; %2500; % m, height the above 2 hand off to each other
+% 1800 0308, 0305 2000 (day)/ 1600 ; 200906 - 2300, 200905 1500
 oStretch = 1; % stretch or shrink overlap
 varAV = true;
 varAVA = false; % was f
@@ -32,6 +34,7 @@ diaryFile = [outPath 'diary' int2str(date) dextsp 'LT-v' VERSION '.markdown'];
 if exist(diaryFile) ~= 0
     delete(diaryFile);
 end 
+
 diary(diaryFile)
 dext = [nb '30chan2.mat']; % extension for data file
 dextout = [nb '30chan2-v' VERSION '.mat']; % extension for output file with version
@@ -39,8 +42,8 @@ dexts = [nb '00.mat'];
 fext = [nb '30chan2.fig'];
 fextout = [nb '30chan2-v' VERSION '.fig'];
 gext = [nb '30combined.mat'];
-oemGo = 1000; %50; %50;
-oemGoAreal = 50; % 60; 300;
+oemGo = 300; % 300; 50; %50; 20090906-1000
+oemGoAreal = 50; % 50; 60; 300; 20090906-50
 zAoffset = 38; % make dig and anal heights agree
 oemGoA = oemGoAreal + zAoffset;
 pieceWise = true;
@@ -68,14 +71,14 @@ logWV = true;
 cf = 3; %tent function on covariance
 mAir = 28.966;
 mWV = 18.02;
-corrLh = 84 %100;
-corrLalpha = 84 %100 ; % 500 100 2000
+corrLh = 90; %360; %360; %90 %100;
+corrLalpha = 90; %360; %360; %90 %100 ; % 500 100 2000
 oemPath = './'; % for saving plots
 
 % inputs for ralmo data
 in.pieceWise = pieceWise;
 in.date = date;
-in.slope = 37.88;
+in.slope = 34; %30.14; %35; % 2015 37.88; 34 is adhoc, (30+38)/2
 in.slopeA = in.slope ./ 3; % 3 is nominal, not accurate 2.75; 
 % ad hoc factor 3.1096; %./ 2.569 (night); ./ 3.1096 (day)
 % .* (2.76/2*0.9); % ad hoc correction until I get the correct number;
@@ -127,6 +130,8 @@ n = 2*m + 10;
 mchanA = length(Q.zDATAnA);
 mchanD = length(Q.zDATAn);
 mdata = length(y);
+
+%Q.qvTrueRET = Q.qvTrueRET./2;
 
 if logAlpha
     if logWV
@@ -309,8 +314,10 @@ end
 'X.cost'
 X.cost
 
-degF = trace(X.A(1:m,1:m));
-fini = round(degF);
+degF1 = trace(X.A(1:m,1:m));
+degF2 = trace(X.A(m+1:2*m,m+1:2*m));
+
+fini = round(min(degF1,degF2));
 
 if logAlpha
     xaAlpha = exp(x_a(m+1:2*m) + Q.odnormR);
@@ -385,6 +392,18 @@ str = ['Change in N2 dead time from ', num2str(outB(1),'%0.5g'), ' to ',...
     num2str(outB(2),'%0.5g'),' +/- ',num2str(X.e(end-4),'%0.5g'),' ns'];
 disp(str)
 
+% plot raw data
+handfig(1) = figure;
+plot(Q.y2Hz./1e6*y(1:mchanA),Q.zDATAnA,'b')
+hold on
+plot(Q.y2Hz./1e6*y(1+mchanA:2*mchanA),Q.zDATAnA,'r')
+plot(Q.y2Hz./1e6*y(1+2*mchanA:2*mchanA+mchanD),Q.zDATAn,'c')
+plot(Q.y2Hz./1e6*y(1+2*mchanA+mchanD:mdata)./10,Q.zDATAn,'g')
+xlabel('Count Rate (MHz)')
+ylabel('Altitude (km)')
+legend('Analog WV','Analog N2','Digital Water Vapour','Digital N2/10')
+
+
 % remove retrieval points outside of data grid
 mbLo = find(Q.zRET < min(Q.zDATAnA(1),Q.zDATAn(1)));
 mbHi = find(Q.zRET > max(Q.zDATAnA(end),Q.zDATAn(end)));
@@ -393,7 +412,7 @@ mbL = mbLo(end) + 1;
 mbH2 = m - mbH;
 
 % plot Jacobians and averaging kernels
-handfig(1) = figure;
+handfig(2) = figure;
 subplot(2,2,1)
 plot(X.J(1:mchanA,mbL:mbH),Q.zDATAnA./1000)
 if logWV
@@ -438,7 +457,7 @@ end
 xlabel('Jacobian')
 ylabel('Altitude (km)')
 
-handfig(2) = figure;
+handfig(3) = figure;
 subplot(1,2,1)
 plot(X.A(mbL:mbH,mbL:mbH),Q.zRET(mbL:mbH)./1000,':')
 hold on
@@ -488,7 +507,7 @@ for j = 1:m % 3:m-1
     end
 end
 width = wwidth(mbL:mbH);
-handfig(3) = figure;
+handfig(4) = figure;
 plot(width,Q.zRET(mbL:mbH)./1000)
 hold on
 xlabel('Vertical Resolution (m)')
@@ -498,7 +517,7 @@ pltx = get(gca,'XLim');
 plot(pltx,[Q.zRET(fini) Q.zRET(fini)]./1000,'k--')
 
 % plot count residuals
-handfig(4) = figure;
+handfig(5) = figure;
 subplot(2,2,1)
 plot((X.yf(1:mchanA)-y(1:mchanA))./y(1:mchanA).*100,Q.zDATAnA./1000,'b')
 hold on
@@ -559,11 +578,11 @@ plot(-sqrt(yvar(2*mchanA+mchanD+1:mdata))./y(2*mchanA+mchanD+1:mdata)...
     *100,Q.zDATAn./1000,'gx')
 xlabel('Percent difference of SN')
 ylabel('Altitude (km)')
-xlim([-20 20])
+%xlim([-20 20])
 ylim([0 1.05.*oemStop./1000])
 
 % plot retrievals of n and q
-handfig(5) = figure;
+handfig(6) = figure;
 if reality
 %    lambda = 0.3547; lambdaH = 0.40749; lambdaN = 0.38669; tH = xAlpha .*
 %    (lambda./lambdaH).^(-X.x(end-2)); tN = xAlpha .*
@@ -648,7 +667,26 @@ pltx = [.001 10];
 axis([.001 10 0 in.zOEM./1000]);
 semilogx(pltx,[round(Q.zRET(fini)) floor(Q.zRET(fini))]./1000,'k--')
 
-handfig(6) = figure;
+handfig(7) = figure;
+fbad = find(isnan(Q.mmrSnd) == 1);
+fgd = fbad(1)-1;
+fhg = find(Q.zRET < Q.zsnd(fgd));
+ralRET = interp1((ralmo.z(gg:nRalmo+gg-1)-490),ralmo.q(gg:nRalmo+gg-1),...
+    Q.zRET(mbL:fhg(end)),'linear');
+sndRET = interp1(Q.zsnd(1:fgd),Q.mmrSnd(1:fgd),Q.zRET(mbL:fhg(end)),'linear');
+xvmr = X.vmr(mbL:fhg(end)).*1000.*(mWV./mAir).*(outSlopeA./in.slope);
+plot((xvmr-sndRET)./sndRET*100,Q.zRET(mbL:fhg(end))./1000,'ro:')
+hold on
+plot((ralRET-sndRET)./sndRET*100,Q.zRET(mbL:fhg(end))./1000,'bx:')
+ylim([0 round(Q.zRET(fini)./1000)+1])
+plot([0 0],[0 round(Q.zRET(fini)./1000)+1],'k:')
+pltx = get(gca,'XLim');
+%plot(pltx,[Q.zRET(fini) Q.zRET(fini)]./1000,'k--')
+xlabel('Percent Difference Versus Sonde')
+legend('OEM','RALMO')
+ylabel('Altitude (km)')
+
+handfig(8) = figure;
 subplot(1,2,1)
 plot(xaAlpha(mbL:mbH),Q.zRET(mbL:mbH)./1000)
 hold on
@@ -673,7 +711,7 @@ plot(Q.tauRno,Q.zDATAn./1000,'g')
 pltx = get(gca,'XLim');
 plot(pltx,[Q.zRET(fini) Q.zRET(fini)]./1000,'k--')
 
-handfig(7) = figure;
+handfig(9) = figure;
 xaAlphaD = interp1(Q.zRET(mbL:mbH),xaAlpha(mbL:mbH),Q.zDATAn,'linear');
 xAlphaD = interp1(Q.zRET(mbL:mbH),xAlpha(mbL:mbH),Q.zDATAn,'linear');
 alp = derivative(xAlphaD(3:end-2))./derivative(Q.zDATAn(3:end-2));
@@ -688,7 +726,7 @@ title 'Extinction'
 legend('Molecular Extinction','Aerosol Extinction')
 plot([0 0],[0 round(Q.zDATAn(end)./1000)],'k:')
 
-handfig(8) = figure;
+handfig(10) = figure;
 hold on
 if logAlpha
     plot(X.e(m+1:2*m).*100,Q.zRET./1000)
@@ -756,7 +794,7 @@ SlopeErr = sqrt(diag(SxSlope(1:m,1:m)));
 OlaperrH = sqrt(diag(SxOlapH(1:m,1:m)));
 OlaperrN = sqrt(diag(abs(SxOlapN(1:m,1:m)))); % last element negative?
 
-handfig(9) = figure;
+handfig(11) = figure;
 title('wvmr')
 'errors only correct for log(vmr) retrieval'
 % note since X.x is the log(vmr), sigma_X.x = sigma_vmr / vmr

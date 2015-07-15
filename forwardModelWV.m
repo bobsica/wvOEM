@@ -72,9 +72,9 @@ SH = SHtrue .* exp(-SHHz.*x(end-5).*1e-9) + exp(x(end-1));
 SNHz = Q.y2Hz .* SNtrue;
 SN = SNtrue .* exp(-SNHz.*x(end-4).*1e-9) + exp(x(end));
 
-if ~isempty(find(isnan(SN) == 1) | find(isnan(SNA) == 1))
+if (sum(isnan(SN)) ~= 0 || sum(isnan(SNA)) ~= 0)
     'in forwardModel: Nans in FM'
-    dbstop in forwardModelWV at 78
+    dbstop in forwardModelWV at 77
 end
 
 return
