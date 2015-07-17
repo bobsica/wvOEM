@@ -12,17 +12,19 @@
 VERSION = '1-2-0'
 %0305 12: 3000, 1200, 20, 80, 1750, true, true
 %0305 00: 5000, 1300, 20, 80, 1600, true, true
-date = 20090906; %20150305;20090905 (noon), 0906 (midnight)
-nb = '00';
+date = 20150305; %20090906; %20150305;20090905 (noon), 0906 (midnight)
+nb = '12';
 dextsp = [nb '30'];
 %14000; % 0308 8000/11000; 0305 2500 (day), 5000; 200906 - 14000 200905 7000
-oemStop = 14000; 
+oemStop = 2500; 
 %5000; % 0308 5000; 0305 1300, 1300 (night); 200906 - 5000, 200905 3500 day
-oemStopA = 5000; 
-in.LRfree = 50; % was 20 on 0305, 0308 50, 200905-6 50
-in.LRpbl = 80; % 50 on 0305; was 80 on otherwise
-in.LRtranHeight = 2300; %2500; % m, height the above 2 hand off to each other
+oemStopA = 1300; 
+in.LRfree = 20; % was 20 on 0305, 0308 50, 200905-6 50
+in.LRpbl = 50; % 50 on 0305; was 80 on otherwise
+in.LRtranHeight = 2000; %2500; % m, height the above 2 hand off to each other
 % 1800 0308, 0305 2000 (day)/ 1600 ; 200906 - 2300, 200905 1500
+corrLh = 90; % 90 (night) 360 (day); %360; %90 %100;
+corrLalpha = 90; %90 360; %360; %90 %100 ; % 500 100 2000
 oStretch = 1; % stretch or shrink overlap
 varAV = true;
 varAVA = false; % was f
@@ -42,8 +44,8 @@ dexts = [nb '00.mat'];
 fext = [nb '30chan2.fig'];
 fextout = [nb '30chan2-v' VERSION '.fig'];
 gext = [nb '30combined.mat'];
-oemGo = 300; % 300; 50; %50; 20090906-1000
-oemGoAreal = 50; % 50; 60; 300; 20090906-50
+oemGo = 300; %300; % 300; 50; %50; 20090906-1000
+oemGoAreal = 50; %50; % 50; 60; 300; 20090906-50
 zAoffset = 38; % make dig and anal heights agree
 oemGoA = oemGoAreal + zAoffset;
 pieceWise = true;
@@ -71,8 +73,6 @@ logWV = true;
 cf = 3; %tent function on covariance
 mAir = 28.966;
 mWV = 18.02;
-corrLh = 90; %360; %360; %90 %100;
-corrLalpha = 90; %360; %360; %90 %100 ; % 500 100 2000
 oemPath = './'; % for saving plots
 
 % inputs for ralmo data
@@ -107,6 +107,8 @@ in.dexts = dexts;
 in.dextsp = dextsp;
 in.oStretch = oStretch;
 in.zAoffset = zAoffset;
+in.corrLh = corrLh;
+in.corrLalpha = corrLalpha;
 in.dext = dext
 
 % initialize R, retrieval structure, for Q.pack, though we don't use this
@@ -394,14 +396,20 @@ disp(str)
 
 % plot raw data
 handfig(1) = figure;
+subplot(1,2,1)
 plot(Q.y2Hz./1e6*y(1:mchanA),Q.zDATAnA,'b')
 hold on
 plot(Q.y2Hz./1e6*y(1+mchanA:2*mchanA),Q.zDATAnA,'r')
-plot(Q.y2Hz./1e6*y(1+2*mchanA:2*mchanA+mchanD),Q.zDATAn,'c')
-plot(Q.y2Hz./1e6*y(1+2*mchanA+mchanD:mdata)./10,Q.zDATAn,'g')
 xlabel('Count Rate (MHz)')
 ylabel('Altitude (km)')
-legend('Analog WV','Analog N2','Digital Water Vapour','Digital N2/10')
+legend('Analog WV','Analog N2')
+subplot(1,2,2)
+semilogx(Q.y2Hz./1e6*y(1+2*mchanA:2*mchanA+mchanD),Q.zDATAn,'b')
+hold on
+semilogx(Q.y2Hz./1e6*y(1+2*mchanA+mchanD:mdata),Q.zDATAn,'red')
+xlabel('Count Rate (MHz)')
+ylabel('Altitude (km)')
+legend('Digital Water Vapour','Digital N2')
 
 
 % remove retrieval points outside of data grid
