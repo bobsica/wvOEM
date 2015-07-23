@@ -71,14 +71,15 @@ load './ralmoFixedOverlap.mat'
 dzRaw =  zCounts(2) - zCounts(1);
 y2HzRaw = clight ./ (2.*(deltaTime.*Rate).*dzRaw);
 
-S.Sn2 = N2counts; % already in counts ./ (y2HzRaw./1e6);
-S.Swv = WVcounts; % ./ (y2HzRaw./1e6);
-S.Sn2A = N2countsA;
-S.SwvA = WVcountsA;
-S.z = zCounts;
-tmpwv = y2HzRaw .* WVcounts;
+lS = length(N2counts);
+S.Sn2 = N2counts(1:lS-in.zAoffset); % already in counts ./ (y2HzRaw./1e6);
+S.Swv = WVcounts(1:lS-in.zAoffset); % ./ (y2HzRaw./1e6);
+S.Sn2A = N2countsA(1+in.zAoffset:end);
+S.SwvA = WVcountsA(1+in.zAoffset:end);
+S.z = zCounts(1:lS-in.zAoffset);
+tmpwv = y2HzRaw .* WVcounts(1:lS-in.zAoffset);
 S.cSwv = (tmpwv./(1-tmpwv.*4e-9)) ./ y2HzRaw;
-tmpn2 = y2HzRaw .* N2counts;
+tmpn2 = y2HzRaw .* N2counts(1:lS-in.zAoffset);
 S.cSn2 = (tmpn2./(1-tmpn2.*4e-9)) ./ y2HzRaw;
 
 % coadd
@@ -166,7 +167,7 @@ else
     SHcoaddA = SHcoaddA(dgoA(1):dstp(end));
     SNcoaddA = SNcoaddA(dgoA(1):dstp(end));
     zN = zzN(dgo(1):dstp(end));
-    zNA = zzN(dgoA(1):dstp(end)) - in.zAoffset;
+    zNA = zzN(dgoA(1):dstp(end)); % corrected earlier - in.zAoffset;
 end    
 % logic above is coadding analog decrease by 1/sqrt(bins), and the
 % uncertainty is the standard deviation relative to the analog
@@ -328,9 +329,9 @@ asrDATAsA(fnegA) = 1;
 %basrZ = find(zN > 8000); asrDATAs(basrZ) = 0; basr = find(asrDATAs < 0);
 %asrDATAs(basr) = 0;
 alphaAer = LR .* (beta_mol_DATA .* (asrDATAs-1));
-znoAer = find(zN > 12000); % was 3000 for 20130122
+znoAer = find(zN > 15000); % was 3000 for 20130122
 alphaAer(znoAer) = 0;
-'asr set to 0 > 12000'
+'asr set to 0 > 15000'
 %if in.logAlpha
     fl0 = find(alphaAer <= 0);
     alphaAer(fl0) = 1e-12;
@@ -636,6 +637,9 @@ Q.nNA = nNzA(1:dendNA(end));
 Q.sigmaH = sigmaH;
 Q.sigmaN = sigmaN;
 Q.sigmaR = sigmaR;
+Q.lambda = lambda;
+Q.lambdaH = lambdaH;
+Q.lambdaN = lambdaN;
 Q.sigRamN = sigRamN;
 Q.sigRamH = sigRamH;
 Q.backVarN = backVarN;
@@ -712,8 +716,10 @@ Q.tauRret = interp1(zN,tauR,Q.zRET,'linear','extrap');
 Q.tauHret = interp1(zN,tauH,Q.zRET,'linear','extrap');
 Q.tauNret = interp1(zN,tauN,Q.zRET,'linear','extrap');
 
-olapDret = zeros(size(Q.zRET));
-fltr = find(Q.zRET <= ralmoO.zoverlap(end));
+olapRET = ones(size(zRET));
+fltr = find(zRET <= ralmoO.zoverlap(end));
+olapRET(fltr) = interp1(ralmoO.zoverlap,ralmoO.overlap,zRET(fltr),'linear');
+Q.olapRET = olapRET;
 
 figure
 subplot(1,2,1)

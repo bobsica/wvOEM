@@ -16,15 +16,15 @@ date = 20090906; %20090906; %20150305;20090905 (noon), 0906 (midnight)
 nb = '00';
 dextsp = [nb '30'];
 %14000; % 0308 8000/11000; 0305 2500 (day), 5000; 200906 - 14000 200905 7000
-oemStop = 14000; 
+oemStop = 15000; 
 %5000; % 0308 5000; 0305 1300, 1300 (night); 200906 - 5000, 200905 3500 day
-oemStopA = 5000; 
+oemStopA = 10000; 
 in.LRfree = 50; % was 20 on 0305, 0308 50, 200905-6 50
 in.LRpbl = 80; % 50 on 0305; was 80 on otherwise
 in.LRtranHeight = 2300; %2500; % m, height the above 2 hand off to each other
 % 1800 0308, 0305 2000 (day)/ 1600 ; 200906 - 2300, 200905 1500
 corrLh = 90; % 90 (night) 360 (day); %360; %90 %100;
-corrLalpha = 90; %90 360; %360; %90 %100 ; % 500 100 2000
+corrLalpha = 2000; %90 360; %360; %90 %100 ; % 500 100 2000
 oStretch = 1; % stretch or shrink overlap
 varAV = true;
 varAVA = false; % was f
@@ -44,10 +44,10 @@ dexts = [nb '00.mat'];
 fext = [nb '30chan2.fig'];
 fextout = [nb '30chan2-v' VERSION '.fig'];
 gext = [nb '30combined.mat'];
-oemGo = 300; %300; % 300; 50; %50; 20090906-1000
+oemGo = 1500; %300; % 300; 50; %50; 20090906-1000
 oemGoAreal = 50; %50; % 50; 60; 300; 20090906-50
-zAoffset = 38; % make dig and anal heights agree
-oemGoA = oemGoAreal + zAoffset;
+zAoffset = 10; % 10 bins, i.e. 10*3.75=37.5 m, make dig and anal heights agree
+oemGoA = oemGoAreal; % + zAoffset;
 pieceWise = true;
 deadTimeH = 4; %4.0; % ns
 dfacDeadH = 0.01; % 0308 0.01, 0305 0.001
@@ -68,7 +68,7 @@ if reality
 end
 savefigs = true
 savedat = true
-logAlpha = false;
+logAlpha = true; %false;
 logWV = true;
 cf = 3; %tent function on covariance
 mAir = 28.966;
@@ -133,8 +133,8 @@ mchanA = length(Q.zDATAnA);
 mchanD = length(Q.zDATAn);
 mdata = length(y);
 
-%Q.qvTrueRET = Q.qvTrueRET./2;
-
+% 'BAD'
+% Q.odRret = Q.odRret*2.5;
 if logAlpha
     if logWV
         x1 = log(Q.qvTrueRET);
@@ -178,7 +178,7 @@ dfacOD = 0.5; % 0.25, 0.20;
 dfacAng = 0.01; % 0.05
 dfacCNp = 0.1; % was 0.25;
 dfacCHp = 0.5; 
-dfacOlap = 0.01;
+dfacOlap = 0.1*exp(-Q.zRET./1000); %0.25; %0.01;
 
 if logWV
     varlogq = (dfacq .* ones(size(Q.zRET))).^2;
@@ -200,7 +200,7 @@ else
     % can't have variance of 1st value be 0, but Q.odRret(1) = 0
 end 
 
-varOla = (dfacOlap.*Q.olap).^2;
+varOla = (dfacOlap.*Q.olapRET).^2;
 varOlap = [varOla; varOla]; % for 2*m retrieval parameters for Solap
 varCNp = dfacCNp.^2; %(dfacCNp .* Q.CNp).^2;
 varCHp = dfacCHp.^2; %(dfacCNp .* Q.CNp).^2;
@@ -210,25 +210,25 @@ varAng = (dfacAng .* Q.Ang).^2;
 %varTheta = (dfacTheta.*Q.Theta).^2;
 varDTH = (dfacDeadH.*Q.DeadTimeH).^2;
 varDTN = (dfacDeadN.*Q.DeadTimeN).^2;
-varHdig = Q.backVarH./(Q.backH.^2);
-varNdig = Q.backVarN./(Q.backN.^2);
+% varHdig = Q.backVarH./(Q.backH.^2);
+% varNdig = Q.backVarN./(Q.backN.^2);
 
 %'reducing background variance by 0.1/0.1' vars2 = [varlogq; varAlpha;
 %varDT; Q.backVarH; Q.backVarN]; vars2 = [varlogq; varAlpha; Q.backVarH;
 %Q.backVarN];
 vars2 = [varlogq; varOD; varCHp; varCNp; varCNp; varAng; varDTH; varDTN;...
-     Q.backVarHA; Q.backVarNA; varHdig; varNdig];
+     Q.backVarHA; Q.backVarNA; Q.backVarH; Q.backVarN];
 
 dzRET = Q.zRET(2) - Q.zRET(1);
 lc = (round(corrLh ./ dzRET) .* dzRET) .* ones(size(Q.zRET));
 lcalpha = (round(corrLalpha ./ dzRET) .* dzRET) .* ones(size(Q.zRET));
 
-Airvar = (dfacAir .* Q.nNret).^2; % only perturbing N2, not air
+Airvartmp = (dfacAir .* Q.nNret).^2; % only perturbing N2, not air
+Airvar = [Airvartmp; Airvartmp]; % for 2*m retrieval parameters
 
 S_a = zeros(n,n);
 Sair = zeros(n,n);
 Solap = zeros(n,n);
-SolapA = zeros(n,n);
 
 SsigmaN = (dfacSigmaN.*Q.sigmaN).^2;
 SsigmaH = (dfacSigmaH.*Q.sigmaH).^2;
@@ -258,19 +258,13 @@ for i=1:m
         S_a(i,j) = sigprod .* shape(cf); %Gaussian correlation function
         Sair(i,j) = sigAirvar .* shape(cf);
         Solap(i,j) = sigOlapvar .* shape(cf);
-%         SolapA(i,j) = Solap(i,j);
-%         if Q.zRET(j) < Q.zRET(mvarLR(end)+1) || Q.zRET(j) > Q.zRET(mvarHR(1))
-%             SolapA(i,j) = 0;
-%         end
     end
-%     if Q.zRET(i) < Q.zRET(mvarLR(end)+1) || Q.zRET(i) > Q.zRET(mvarHR(1))
-%         SolapA(i,j) = 0;
-%     end
 end
 % using different correlation length for alpha
 for i=m+1:2*m
     for j=m+1:2*m
         sigprod = sqrt(vars2(i) .* vars2(j));
+        sigAirvar = sqrt(Airvar(i) .* Airvar(j));
         sigOlapvar = sqrt(varOlap(i) .* varOlap(j));
         diffz = Q.zRET(i-m) - Q.zRET(j-m);
         sumlc = lcalpha(i-m) + lcalpha(j-m);
@@ -280,16 +274,10 @@ for i=m+1:2*m
         if shape(3) < 0
             shape(3) = 0;
         end
-        S_a(i,j) = sigprod .* shape(cf); %Gaussian correlation function
+        S_a(i,j) = sigprod .* shape(cf); %.* shape(cf); %Gaussian correlation function
+        Sair(i,j) = sigAirvar .* shape(cf);
         Solap(i,j) = sigOlapvar .* shape(cf);
-%         SolapA(i,j) = Solap(i,j);
-%         if Q.zRET(j-m) < Q.zRET(mvarLR(end)+1) || Q.zRET(j-m) > Q.zRET(mvarHR(1))
-%             SolapA(i,j) = 0;
-%         end
     end
-%     if Q.zRET(i-m) < Q.zRET(mvarLR(end)+1) || Q.zRET(i-m) > Q.zRET(mvarHR(1))
-%         SolapA(i,j) = 0;
-%     end
 end
 
 S_a(n-9,n-9) = vars2(n-9);
@@ -322,13 +310,86 @@ degF2 = trace(X.A(m+1:2*m,m+1:2*m));
 finiDoF = round(min(degF1,degF2));
 
 if logAlpha
-    xaAlpha = exp(x_a(m+1:2*m) + Q.odnormR);
-    xAlpha = exp(X.x(m+1:2*m) + Q.odnormR);
+    xaAlpha = exp(x_a(m+1:2*m)); % + Q.odnormR);
+    xAlpha = exp(X.x(m+1:2*m)); % + Q.odnormR);
 else
     xaAlpha = x_a(m+1:2*m); % done in makeQ + Q.odnormR (from ground to start);
     xAlpha = X.x(m+1:2*m); % + Q.odnormR;
 end
 
+% remove retrieval points outside of data grid
+mbLo = find(Q.zRET < min(Q.zDATAnA(1),Q.zDATAn(1)));
+mbHi = find(Q.zRET > max(Q.zDATAnA(end),Q.zDATAn(end)));
+mbH = mbHi(1) - 1;
+mbL = mbLo(end) + 1;
+mbH2 = m - mbH;
+
+% calculate errors for q
+digWVgo = 2*mchanA + 1;
+digN2go = 2*mchanA + mchanD +1;
+anN2go = mchanA + 1;
+%Sxsigma = X.G*R.KsigmaRay*SsigmaN*R.KsigmaRay'*X.G';
+Sxsigma = X.G*R.KsigmaRay*SsigmaN*R.KsigmaRay'*X.G';
+% SxsigmaH = X.G(1:m,1:mchanA)*R.KsigmaHA*SsigmaH*R.KsigmaHA'*X.G(1:m,1:mchanA)' + ...
+%     X.G(1:m,digWVgo:digN2go-1)*R.KsigmaH*SsigmaH*R.KsigmaH'...
+%     *X.G(1:m,digWVgo:digN2go-1)';
+% SxsigmaSHR = X.G(1:m,1:mchanA)*R.KsigmaSHRA*SsigmaR*R.KsigmaSHRA'*X.G(1:m,1:mchanA)' ...
+%     + X.G(1:m,digWVgo:digN2go-1)*R.KsigmaSHR*SsigmaR*R.KsigmaSHR'*...
+%     X.G(1:m,digWVgo:digN2go-1)';
+% SxsigmaSNR = X.G(1:m,anN2go:2*mchanA)*R.KsigmaSNRA*SsigmaR*R.KsigmaSNRA'*...
+%     X.G(1:m,anN2go:2*mchanA)' + X.G(1:m,digN2go:mdata)*R.KsigmaSNR*SsigmaR...
+%     *R.KsigmaSNR'*X.G(1:m,digN2go:mdata)';
+% SxAirH = X.G(1:m,1:mchanA)*R.KairA(1:mchanA,1:m)*Sair(1:m,1:m)*R.KairA(1:mchanA,1:m)'...
+%     *X.G(1:m,1:mchanA)' + X.G(1:m,digWVgo:digN2go-1)...
+%     *R.Kair(digWVgo:digN2go-1,1:m)*Sair(1:m,1:m)*R.Kair(digWVgo:digN2go-1,1:m)'...
+%     *X.G(1:m,digWVgo:digN2go-1)';
+% SxAirN = X.G(1:m,mchanA+1:2*mchanA)*R.KairA(mchanA+1:2*mchanA,1:m)...
+%     *Sair(1:m,1:m)*R.KairA(mchanA+1:2*mchanA,1:m)'*X.G(1:m,mchanA+1:2*mchanA)'...
+%     + X.G(1:m,digN2go:mdata)*R.Kair(digN2go:mdata,1:m)...
+%     *Sair(1:m,1:m)*R.Kair(digN2go:mdata,1:m)'*X.G(:,digN2go:mdata)';
+SxAir = X.G*R.Kair*Sair*R.Kair'*X.G';
+
+%SxSlopeA = X.G(:,1:mchanA)*R.KslopeA*Sslope*R.KslopeA'*X.G(:,1:mchanA)'...
+%    + X.G(:,anN2go:digWVgo-1)*R.KslopeA*Sslope*R.KslopeA'*X.G(:,anN2go:digWVgo-1)';
+%SxSlope = X.G(1:m,digN2go:mdata)*R.Kslope*Sslope*R.Kslope'*X.G(1:m,digN2go:mdata)'...
+%    + X.G(1:m,digWVgo:digN2go-1)*R.Kslope*Sslope*R.Kslope'*X.G(1:m,digWVgo:digN2go-1)';
+% SxSlope = X.G(:,1:mchanA)*R.Kslope(1:mchanA)*Sslope*R.Kslope(1:mchanA)'...
+%     *X.G(:,1:mchanA)'...
+%     + X.G(:,digWVgo:digN2go-1)*R.Kslope(mchanA+1:mchanA+mchanD)*Sslope...
+%     *R.Kslope(mchanA+1:mchanA+mchanD)'*X.G(:,digWVgo:digN2go-1)';
+SxSlope = X.G*R.Kslope*Sslope*R.Kslope'*X.G';
+%SxSlope = SxSlopeA.*(in.slopeA./in.slope).^2 + SxSlopeD;
+% SxOlapH = X.G(:,1:mchanA)*R.KolapA(1:mchanA,:)...
+%     *Solap*R.KolapA(1:mchanA,:)'*X.G(:,1:mchanA)'...
+%     + X.G(:,digWVgo:digN2go-1)*R.Kolap(digWVgo:digN2go-1,:)...
+%     *Solap*R.Kolap(digWVgo:digN2go-1,:)'*X.G(:,digWVgo:digN2go-1)';
+% SxOlapN = X.G(:,mchanA+1:2*mchanA)*R.KolapA(mchanA+1:2*mchanA,:)...
+%     *Solap*R.KolapA(mchanA+1:2*mchanA,:)'*X.G(:,mchanA+1:2*mchanA)'...
+%     + X.G(:,digN2go:mdata)*R.Kolap(digN2go:mdata,:)...
+%     *Solap*R.Kolap(digN2go:mdata,:)'*X.G(:,digN2go:mdata)';
+% SxOlapN = X.G(:,digN2go:mdata)*R.Kolap(digN2go:mdata,:)...
+%     *Solap*R.Kolap(digN2go:mdata,:)'*X.G(:,digN2go:mdata)';
+SxOlap = X.G*R.Kolap*Solap*R.Kolap'*X.G';
+
+sigmaRayErrq = sqrt(diag(Sxsigma(1:m,1:m)));
+% sigmaHerrq = sqrt(diag(SxsigmaH(1:m,1:m)));
+% sigmaRerrHq = sqrt(diag(SxsigmaSHR(1:m,1:m)));
+% sigmaRerrNq = sqrt(diag(SxsigmaSNR(1:m,1:m)));
+
+AirErrq = sqrt(diag(SxAir(1:m,1:m)));
+%AirerrN = sqrt(diag(SxAirN(1:m,1:m)));
+SlopeErrq = sqrt(diag(SxSlope(1:m,1:m)));
+
+%OlaperrH = sqrt(diag(SxOlapH(1:m,1:m)));
+OlapErrq = sqrt(diag(abs(SxOlap(1:m,1:m)))); 
+
+% smoothing error removed: +(X.es(mbL:mbH)).^2, +(OlaperrH(mbL:mbH)).^2,
+% +(AirerrN(mbL:mbH)).^2+(sigmaRerrH(mbL:mbH)).^2+(sigmaRerrN(mbL:mbH)).^2
+% +(sigmaHerrq(mbL:mbH)).^2
+totErrq = sqrt((X.eo(mbL:mbH)).^2+(sigmaRayErrq(mbL:mbH)).^2....
+    +(AirErrq(mbL:mbH)).^2+(SlopeErrq(mbL:mbH)).^2+(OlapErrq(mbL:mbH)).^2);
+
+% output to screen
 disp(' ')
 outB =[round(degF1) round(degF2) length(Q.zRET)];
 str = ['Degrees of Freedom (wv/OD): ', num2str(outB(1),'%0.5g'),...
@@ -417,41 +478,33 @@ xlabel('Count Rate (MHz)')
 ylabel('Altitude (km)')
 legend('Digital Water Vapour','Digital N2')
 
-
-% remove retrieval points outside of data grid
-mbLo = find(Q.zRET < min(Q.zDATAnA(1),Q.zDATAn(1)));
-mbHi = find(Q.zRET > max(Q.zDATAnA(end),Q.zDATAn(end)));
-mbH = mbHi(1) - 1;
-mbL = mbLo(end) + 1;
-mbH2 = m - mbH;
-
 % plot Jacobians and averaging kernels
 handfig(2) = figure;
 subplot(2,2,1)
 plot(X.J(1:mchanA,mbL:mbH),Q.zDATAnA./1000)
-xlabel('ln(WVmmr) - Analog')
+xlabel('Jacobian')
 ylabel('Altitude (km)')
 
 subplot(2,2,2)
 %plot(X.J(mchan+1:mdata,(m+mbL:2*m-mbH2)),Q.zDATAn./1000)
 plot(X.J(mchanA+1:2*mchanA,(m+3:2*m-mbH2)),Q.zDATAnA./1000)
-xlabel('Optical Depth - Analog')
+xlabel('Jacobian')
 ylabel('Altitude (km)')
 
 subplot(2,2,3)
 plot(X.J(2*mchanA+1:2*mchanA+mchanD,mbL:mbH)./1e4,Q.zDATAn./1000)
-xlabel('ln(WVmmr) - Digital (\times 10^{-4})')
+xlabel('Jacobian')
 ylabel('Altitude (km)')
 
 subplot(2,2,4)
 %plot(X.J(mchan+1:mdata,(m+mbL:2*m-mbH2)),Q.zDATAn./1000)
 plot(X.J(2*mchanA+mchanD+1:mdata,(m+3:2*m-mbH2))./1e5,Q.zDATAn./1000)
-xlabel('Optical Depth - Digital (\times 10^{-5})')
+xlabel('Jacobian')
 ylabel('Altitude (km)')
 
 handfig(3) = figure;
 subplot(1,2,1)
-plot(X.A(mbL:mbH,mbL:mbH),Q.zRET(mbL:mbH)./1000,':')
+hk = plot(X.A(mbL:mbH,mbL:mbH),Q.zRET(mbL:mbH)./1000);
 hold on
 unit = ones(size(Q.zRET(mbL:mbH)));
 response = X.A(mbL:mbH,mbL:mbH)*unit;
@@ -460,7 +513,8 @@ fak2 = find(response >= 0.8);
 fakvec = [fak(end); fak2(end); finiDoF];
 fini = max(fakvec);
 %plot(response,Q.zRET(mbL:mbH)./1000,'r:')
-xlabel('ln(WVmmr)')
+set(hk,'LineWidth',0.5)
+xlabel('WV Averaging Kernel')
 ylabel('Altitude (km)')
 %axis([-0.1 1.1 Q.zRET(1)./1000 Q.zRET(end)./1000])
 xlim([-0.1 1.1])
@@ -468,12 +522,13 @@ pltx = get(gca,'XLim');
 plot(pltx,[Q.zRET(fini) Q.zRET(fini)]./1000,'k--')
 
 subplot(1,2,2)
-plot(X.A((m+mbL+2:2*m-mbH2),(m+mbL+2:2*m-mbH2)),Q.zRET(mbL+2:mbH)./1000,':')
+hk = plot(X.A((m+mbL+2:2*m-mbH2),(m+mbL+2:2*m-mbH2)),Q.zRET(mbL+2:mbH)./1000);
 hold on
 unit = ones(size(Q.zRET(mbL+2:mbH)));
 response = X.A((m+mbL+2:2*m-mbH2),(m+mbL+2:2*m-mbH2))*unit;
 %plot(response,Q.zRET(mbL+2:mbH)./1000,'r:')
-xlabel('Optical Depth')
+set(hk,'LineWidth',0.5)
+xlabel('OD Averaging Kernel')
 ylabel('Altitude (km)')
 %axis([-0.1 1.1 Q.zRET(1)./1000 Q.zRET(end)./1000])
 xlim([-0.1 1.1])
@@ -514,7 +569,7 @@ plot(-sqrt(yvar(1:mchanA))./y(1:mchanA)*100,Q.zDATAnA./1000,'r')
 % pltx = get(gca,'XLim');
 % plot(pltx,[maskLow maskLow]./1000,'k--')
 % plot(pltx,[maskHigh maskHigh]./1000,'k--')
-xlabel('Water Vapor - Analog')
+xlabel('WV Residuals - Analog (%)')
 ylabel('Altitude (km)')
 %xlim([-30 30])
 %ylim([0 1.05.*oemStop./1000])
@@ -528,7 +583,7 @@ plot(-sqrt(yvar(mchanA+1:2*mchanA))./y(mchanA+1:2*mchanA)*100,Q.zDATAnA./1000,'r
 % pltx = get(gca,'XLim');
 % plot(pltx,[maskLow maskLow]./1000,'k--')
 % plot(pltx,[maskHigh maskHigh]./1000,'k--')
-xlabel('Nitrogen - Analog')
+xlabel('N2 Residuals - Analog (%)')
 ylabel('Altitude (km)')
 %ylim([0 1.05.*oemStop./1000])
 
@@ -539,9 +594,9 @@ hold on
 plot(sqrt(Q.yTrueH)./Q.yTrueH*100,Q.zDATAn./1000,'r')
 %legend('Residuals','Poisson Noise','Location','Best')
 plot(-sqrt(Q.yTrueH)./Q.yTrueH*100,Q.zDATAn./1000,'r')
-plot(sqrt(yvar(2*mchanA+1:2*mchanA+mchanD))./Q.yTrueH*100,Q.zDATAn./1000,'gx')
-plot(-sqrt(yvar(2*mchanA+1:2*mchanA+mchanD))./Q.yTrueH*100,Q.zDATAn./1000,'gx')
-xlabel('Water Vapor - Digital')
+% plot(sqrt(yvar(2*mchanA+1:2*mchanA+mchanD))./Q.yTrueH*100,Q.zDATAn./1000,'gx')
+% plot(-sqrt(yvar(2*mchanA+1:2*mchanA+mchanD))./Q.yTrueH*100,Q.zDATAn./1000,'gx')
+xlabel('WV Residuals - Digital (%)')
 ylabel('Altitude (km)')
 %xlim([-100 100])
 ylim([0 1.05.*oemStop./1000])
@@ -560,11 +615,11 @@ hold on
 plot(sqrt(Q.yTrueN)./Q.yTrueN*100,Q.zDATAn./1000,'r')
 %legend('Residuals','Poisson Noise','Location','Best')
 plot(-sqrt(Q.yTrueN)./Q.yTrueN*100,Q.zDATAn./1000,'r')
-plot(sqrt(yvar(2*mchanA+mchanD+1:mdata))./y(2*mchanA+mchanD+1:mdata)...
-    *100,Q.zDATAn./1000,'gx')
-plot(-sqrt(yvar(2*mchanA+mchanD+1:mdata))./y(2*mchanA+mchanD+1:mdata)...
-    *100,Q.zDATAn./1000,'gx')
-xlabel('Nitrogen - Digital')
+% plot(sqrt(yvar(2*mchanA+mchanD+1:mdata))./y(2*mchanA+mchanD+1:mdata)...
+%     *100,Q.zDATAn./1000,'gx')
+% plot(-sqrt(yvar(2*mchanA+mchanD+1:mdata))./y(2*mchanA+mchanD+1:mdata)...
+%     *100,Q.zDATAn./1000,'gx')
+xlabel('N2 Residuals - Digital (%)')
 ylabel('Altitude (km)')
 %xlim([-20 20])
 ylim([0 1.05.*oemStop./1000])
@@ -592,7 +647,7 @@ if reality
     'Analysis time ='
     datevec(Q.ralmoTimeEnd)
     gg = 1 + (iRalmo-1)*nRalmo;
-    semilogx(ralmo.q(gg:nRalmo+gg-1),(ralmo.z(gg:nRalmo+gg-1)-490)./1000,'bx')
+    semilogx(ralmo.q(gg:nRalmo+gg-1),(ralmo.z(gg:nRalmo+gg-1)-490)./1000,'b')
     hold on
 else
 %    semilogx(Q.qvTrueRET.*1000.*(mWV./mAir),Q.zRET./1000); % was ./(mAir
@@ -630,7 +685,7 @@ semilogx(Q.qvTrueRET(mbL:mbH).*1000.*(mWV./mAir),Q.zRET(mbL:mbH)./1000,'k-.');
 
 warning off
 ylabel('Altitude (km)')
-xlabel('WVmmr (g/kg)')
+xlabel('WV Mixing Ratio (g/kg)')
 warning on
 
 % if reality
@@ -668,7 +723,7 @@ hold on
 plot((ralRET-sndRET)./sndRET*100,Q.zRET(mbL:fhg(end))./1000,'bx:')
 ylim([0 round(Q.zRET(fini)./1000)+1])
 plot([0 0],[0 round(Q.zRET(fini)./1000)+1],'k:')
-pltx = get(gca,'XLim');
+%pltx = get(gca,'XLim');
 %plot(pltx,[Q.zRET(fini) Q.zRET(fini)]./1000,'k--')
 xlabel('Percent Difference Versus Sonde')
 legend('OEM','RALMO')
@@ -687,6 +742,14 @@ set(hleg,'FontSize',8);
 plot(Q.tauRno,Q.zDATAn./1000,'g')
 pltx = get(gca,'XLim');
 plot(pltx,[Q.zRET(fini) Q.zRET(fini)]./1000,'k--')
+if logAlpha
+    Tup = exp(-xAlpha(mbL:mbH))+exp(-xAlpha(mbL:mbH)).*sqrt((X.eo(mbL+m:mbH+m)));
+    Tdn = exp(-xAlpha(mbL:mbH))-exp(-xAlpha(mbL:mbH)).*sqrt((X.eo(mbL+m:mbH+m)));
+else
+    Tup = exp(-xAlpha(mbL:mbH)) + sqrt((X.eo(mbL+m:mbH+m)));
+    Tdn = exp(-xAlpha(mbL:mbH)) - sqrt((X.eo(mbL+m:mbH+m)));
+end
+jbfilly(Q.zRET(mbL:mbH)'./1000,Tup',Tdn','r','r',0,.25);
 
 handfig(9) = figure;
 subplot(1,2,1)
@@ -727,116 +790,49 @@ xlabel 'Uncertainty (%)'
 ylabel 'Altitude (km)'
 legend('Optical Depth Smoothing','Optical Depth Total')
 
-SolapA = Solap;
-
-digWVgo = 2*mchanA + 1;
-digN2go = 2*mchanA + mchanD +1;
-anN2go = mchanA + 1;
-
-SxsigmaN = X.G(1:m,mchanA+1:2*mchanA)*R.KsigmaNA*SsigmaN*R.KsigmaNA'...
-    *X.G(1:m,mchanA+1:2*mchanA)' + X.G(1:m,digN2go:mdata)*R.KsigmaN...
-    *SsigmaN*R.KsigmaN'...
-    *X.G(1:m,digN2go:mdata)';
-SxsigmaH = X.G(1:m,1:mchanA)*R.KsigmaHA*SsigmaH*R.KsigmaHA'*X.G(1:m,1:mchanA)' + ...
-    X.G(1:m,digWVgo:digN2go-1)*R.KsigmaH*SsigmaH*R.KsigmaH'...
-    *X.G(1:m,digWVgo:digN2go-1)';
-SxsigmaSHR = X.G(1:m,1:mchanA)*R.KsigmaSHRA*SsigmaR*R.KsigmaSHRA'*X.G(1:m,1:mchanA)' ...
-    + X.G(1:m,digWVgo:digN2go-1)*R.KsigmaSHR*SsigmaR*R.KsigmaSHR'*...
-    X.G(1:m,digWVgo:digN2go-1)';
-SxsigmaSNR = X.G(1:m,anN2go:2*mchanA)*R.KsigmaSNRA*SsigmaR*R.KsigmaSNRA'*...
-    X.G(1:m,anN2go:2*mchanA)' + X.G(1:m,digN2go:mdata)*R.KsigmaSNR*SsigmaR...
-    *R.KsigmaSNR'*X.G(1:m,digN2go:mdata)';
-SxAirH = X.G(:,1:mchanA)*R.KairA(1:mchanA,:)*Sair*R.KairA(1:mchanA,:)'...
-    *X.G(:,1:mchanA)' + X.G(:,digWVgo:digN2go-1)...
-    *R.Kair(digWVgo:digN2go-1,:)*Sair*R.Kair(digWVgo:digN2go-1,:)'...
-    *X.G(:,digWVgo:digN2go-1)';
-SxAirN = X.G(:,mchanA+1:2*mchanA)*R.KairA(mchanA+1:2*mchanA,:)...
-    *Sair*R.KairA(mchanA+1:2*mchanA,:)'*X.G(:,mchanA+1:2*mchanA)'...
-    + X.G(:,digN2go:mdata)*R.Kair(digN2go:mdata,:)...
-    *Sair*R.Kair(digN2go:mdata,:)'*X.G(:,digN2go:mdata)';
-%SxSlopeA = X.G(:,1:mchanA)*R.KslopeA*Sslope*R.KslopeA'*X.G(:,1:mchanA)'...
-%    + X.G(:,anN2go:digWVgo-1)*R.KslopeA*Sslope*R.KslopeA'*X.G(:,anN2go:digWVgo-1)';
-SxSlope = X.G(:,digN2go:mdata)*R.Kslope*Sslope*R.Kslope'*X.G(:,digN2go:mdata)'...
-    + X.G(:,digWVgo:digN2go-1)*R.Kslope*Sslope*R.Kslope'*X.G(:,digWVgo:digN2go-1)';
-%SxSlope = SxSlopeA.*(in.slopeA./in.slope).^2 + SxSlopeD;
-SxOlapH = X.G(:,1:mchanA)*R.KolapA(1:mchanA,:)...
-    *Solap*R.KolapA(1:mchanA,:)'*X.G(:,1:mchanA)'...
-    + X.G(:,digWVgo:digN2go-1)*R.Kolap(digWVgo:digN2go-1,:)...
-    *Solap*R.Kolap(digWVgo:digN2go-1,:)'*X.G(:,digWVgo:digN2go-1)';
-SxOlapN = X.G(:,mchanA+1:2*mchanA)*R.KolapA(mchanA+1:2*mchanA,:)...
-    *SolapA*R.KolapA(mchanA+1:2*mchanA,:)'*X.G(:,mchanA+1:2*mchanA)'...
-    + X.G(:,digN2go:mdata)*R.Kolap(digN2go:mdata,:)...
-    *Solap*R.Kolap(digN2go:mdata,:)'*X.G(:,digN2go:mdata)';
-SxOlapN = X.G(:,digN2go:mdata)*R.Kolap(digN2go:mdata,:)...
-    *Solap*R.Kolap(digN2go:mdata,:)'*X.G(:,digN2go:mdata)';
-
-sigmaNerr = sqrt(diag(SxsigmaN(1:m,1:m)));
-sigmaHerr = sqrt(diag(SxsigmaH(1:m,1:m)));
-sigmaRerrH = sqrt(diag(SxsigmaSHR(1:m,1:m)));
-sigmaRerrN = sqrt(diag(SxsigmaSNR(1:m,1:m)));
-
-AirerrH = sqrt(diag(SxAirH(1:m,1:m)));
-AirerrN = sqrt(diag(SxAirN(1:m,1:m)));
-SlopeErr = sqrt(diag(SxSlope(1:m,1:m)));
-
-OlaperrH = sqrt(diag(SxOlapH(1:m,1:m)));
-OlaperrN = sqrt(diag(abs(SxOlapN(1:m,1:m)))); % last element negative?
-
+% plot errors
 handfig(11) = figure;
-%title('wvmr')
-'errors only correct for log(vmr) retrieval'
 % note since X.x is the log(vmr), sigma_X.x = sigma_vmr / vmr
 subplot(1,2,1)
 plot(X.eo(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000)
 hold on
-plot(X.es(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000)
-plot(sigmaRerrH(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
-plot(sigmaRerrN(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
-plot(sigmaHerr(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
-plot(sigmaNerr(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
-plot(AirerrH(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
-plot(AirerrN(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
-plot(SlopeErr(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
-plot(OlaperrH(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'-.')
-plot(OlaperrN(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'-.')
-%plot(DTerr(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
-totH = sqrt((X.eo(mbL:mbH)).^2+(X.es(mbL:mbH)).^2+(sigmaNerr(mbL:mbH)).^2+...
-    (sigmaHerr(mbL:mbH)).^2+(sigmaRerrH(mbL:mbH)).^2+(sigmaRerrN(mbL:mbH)).^2+...
-    (AirerrH(mbL:mbH)).^2+(AirerrN(mbL:mbH)).^2+(SlopeErr(mbL:mbH)).^2+...
-    (OlaperrH(mbL:mbH)).^2+(OlaperrN(mbL:mbH)).^2); %+(DTerr(mbL:mbH)).^2);
-plot(totH.*100,Q.zRET(mbL:mbH)./1000,'k')
-hleg = legend('Statistical','Smoothing','\Gamma_{mol}, \sigma_{R_H}',...
-    '\Gamma_{mol}, \sigma_{R_N}','\Gamma_{mol}, \sigma_{N}',...
-    '\Gamma_{mol}, \sigma_{H}','\Gamma_{mol}, n_{air_H}','\Gamma_{mol}, n_{air_N}',...
-    'Calibration','Overlap H', 'Overlap N','Total',...
-    'Location','Best');
+%plot(X.es(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000)
+plot(sigmaRayErrq(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
+% plot(sigmaRerrN(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
+% plot(sigmaHerr(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
+% plot(sigmaNerr(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
+plot(AirErrq(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
+%plot(AirerrN(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
+plot(SlopeErrq(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
+%plot(OlaperrH(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'-.')
+plot(OlapErrq(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'-.')
+plot(totErrq.*100,Q.zRET(mbL:mbH)./1000,'k')
+hleg = legend('Statistical','\sigma_{Rayleigh}', 'Air Density',...
+    'Calibration','Overlap','Total','Location','Best');
 set(hleg,'FontSize',8);
 xlabel('Uncertainty (%)')
 ylabel('Altitude (km)')
 pltx = get(gca,'XLim');
 plot(pltx,[Q.zRET(fini) Q.zRET(fini)]./1000,'k--')
-xlim([0 50])
+%xlim([0 50])
 
 subplot(1,2,2)
 plot(X.eo(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000)
 hold on
-plot(X.es(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000)
-plot(sigmaRerrH(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
-plot(sigmaRerrN(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
-plot(sigmaHerr(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
-plot(sigmaNerr(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
-plot(AirerrH(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
-plot(AirerrN(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
-plot(SlopeErr(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
-plot(OlaperrH(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'-.')
-plot(OlaperrN(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'-.')
-plot(totH.*100,Q.zRET(mbL:mbH)./1000,'k')
-% hleg = legend('Statistical','Smoothing','\Gamma_{mol}, \sigma_{R_H}',...
-%     '\Gamma_{mol}, \sigma_{R_N}','\Gamma_{mol}, \sigma_{N}',...
-%     '\Gamma_{mol}, \sigma_{H}','\Gamma_{mol}, n_{air_H}','\Gamma_{mol}, n_{air_N}',...
-%     'Calibration Const','Overlap H', 'Overlap N','Total',...
-%     'Location','Best');
-% set(hleg,'FontSize',8);
+%plot(X.es(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000)
+plot(sigmaRayErrq(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
+% plot(sigmaRerrN(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
+% plot(sigmaHerr(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
+% plot(sigmaNerr(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
+plot(AirErrq(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
+%plot(AirerrN(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
+plot(SlopeErrq(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
+%plot(OlaperrH(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'-.')
+plot(OlapErrq(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'-.')
+plot(totErrq.*100,Q.zRET(mbL:mbH)./1000,'k')
+hleg = legend('Statistical','\sigma_{Rayleigh}', 'Air Density',...
+    'Calibration','Overlap','Total','Location','Best');
+set(hleg,'FontSize',8);
 xlabel('Uncertainty (%)')
 ylabel('Altitude (km)')
 pltx = get(gca,'XLim');

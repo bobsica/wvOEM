@@ -93,29 +93,23 @@ Kernel(m2+1:m2+m3,n-1) = d3;
 [d1,d2,d3,d4] = derivBN2(Q,x,n,@forwardModelWV);
 Kernel(m2+m3+1:mdata,n) = d4;
 
+J = Kernel;
 
 % b parameters Air density
-Kair = zeros(mdata,n);
-Kolap = zeros(mdata,n);
+KairD = zeros(mdata,n);
+KolapD = zeros(mdata,n);
 KairA = zeros(mdata,n);
 KolapA = zeros(mdata,n);
-dSHdz = -(SH - Q.backH) ./ Q.zDATAn;
-dSNdz = -(SN - Q.backN) ./ Q.zDATAn;
-dSHdzA = -(SHA - Q.backHA) ./ Q.zDATAnA;
-dSNdzA = -(SNA - Q.backNA) ./ Q.zDATAnA;
-dOlap = Q.olapD;
-dOlapA = Q.olapDA ;
-dzdo = 1./dOlap;
-ff = find(isinf(dzdo));
-dzdo(ff) = 0;
-dzdoA = 1./dOlapA;
-ff = find(isinf(dzdoA));
-dzdoA(ff) = 0;
-dSHolapi = dSHdz .* dzdo;
-dSNolapi = dSNdz .* dzdo;
-dSHolapiA = dSHdzA .* dzdoA;
-dSNolapiA = dSNdzA .* dzdoA;
 
+dSHolapi = (SH - exp(x(end-1))) ./ Q.olap;
+dSNolapi = (SN - exp(x(end))) ./ Q.olap;
+dSHolapiA = (SHA - x(end-3)) ./ Q.olapA;
+dSNolapiA = (SNA - x(end-2)) ./ Q.olapA;
+
+% dSHdz = -(SH - exp(x(end-1))) ./ Q.zDATAn;
+% dSNdz = -(SN - exp(x(end))) ./ Q.zDATAn;
+% dSHdzA = -(SHA - x(end-3)) ./ Q.zDATAnA;
+% dSNdzA = -(SNA - x(end-2)) ./ Q.zDATAnA;
 nAir = Q.nN ./ Q.N2rat;
 nAirA = Q.nNA ./ Q.N2rat;
 warning off
@@ -127,98 +121,136 @@ pdA = polyder(pA);
 dndz = exp(polyval(p,Q.zDATAn)) .* polyval(pd,Q.zDATAn);
 dndzA = exp(polyval(p,Q.zDATAnA)) .* polyval(pdA,Q.zDATAnA);
 % find dF_i/dN on data grid
-term1 = (SH-Q.backH) ./ nAir;
-term2 = -((SH-Q.backH) .* nAir ./ dndz) .* (Q.sigmaR + Q.sigmaH);
-dSHdn = term1 + term2;
-term1 = (SN-Q.backN) ./ nAir .* Q.N2rat;
-term2 = -((SN-Q.backN) .* nAir ./ dndz) .* (Q.sigmaR + Q.sigmaN);
-dSNdn = term1 + term2;
-term1A = (SHA-Q.backHA) ./ nAirA;
-term2A = -((SHA-Q.backHA) .* nAirA ./ dndzA) .* (Q.sigmaR + Q.sigmaH);
-dSHdnA = term1A + term2A;
-term1A = (SNA-Q.backNA) ./ nAirA .* Q.N2rat;
-term2A = -((SNA-Q.backNA) .* nAirA ./ dndzA) .* (Q.sigmaR + Q.sigmaN);
-dSNdnA = term1A + term2A;
+%term2 = -((SH-exp(x(end-1))) .* nAir ./ dndz) .* (Q.sigmaR + Q.sigmaH);
+term1 = (SH-exp(x(end-1))) ./ nAir;
+term2 = -(SH-exp(x(end-1))) .* (Q.sigmaR + Q.sigmaH) .* nAir ./ dndz;
+dSHdn = term1 + term2; %zeros(size(nAir)); 
+term1 = (SN-exp(x(end))) ./ Q.nN;
+term2 = -(SN-exp(x(end))) .* (Q.sigmaR + Q.sigmaN) .* nAir ./ dndz;
+dSNdn = term1 + term2; %zeros(size(nAir)); 
+term1 = (SHA-x(end-3)) ./ nAirA;
+term2 = -(SHA-x(end-3)) .* (Q.sigmaR + Q.sigmaH) .* nAirA ./ dndzA;
+dSHdnA = term1 + term2; %zeros(size(nAirA));
+term1 = (SNA-x(end-2)) ./ Q.nNA;
+term2 = -(SNA-x(end-2)) .* (Q.sigmaR + Q.sigmaN) .* nAirA ./ dndzA;
+dSNdnA = term1 + term2;
+
+% dSHdn = (SH-exp(x(end-1))) .* (Q.sigmaR.*nAir);
+% term1 = (SN-exp(x(end))) ./ nAir .* Q.N2rat;
+% term2 = -((SN-exp(x(end))) .* nAir ./ dndz) .* (Q.sigmaR + Q.sigmaN);
+% dSNdn = term1 + term2;
+% term1A = (SHA-x(end-3)) ./ nAirA;
+% term2A = -((SHA-x(end-3)) .* nAirA ./ dndzA) .* (Q.sigmaR + Q.sigmaH);
+% dSHdnA = term1A + term2A;
+% term1A = (SNA-x(end-2)) ./ nAirA .* Q.N2rat;
+% term2A = -((SNA-x(end-2)) .* nAirA ./ dndzA) .* (Q.sigmaR + Q.sigmaN);
+% dSNdnA = term1A + term2A;
 % dn_i / dn_j correction to dF/dn_i to go from data to retrieval grid note
 % for zRET < or > zDATA you can't interpolate, so am using ifac for linear
 % extrapolation
 dzDATA = Q.zDATAn(2) - Q.zDATAn(1);
-for j = 1:m
-    for i = 1:m1-1
-        if (Q.zRET(j) >= Q.zDATAn(i)) && (Q.zRET(j) < Q.zDATAn(i+1))
-            ifac = dzDATA ./ (Q.zDATAn(i+1) - Q.zRET(j));
-        elseif Q.zRET(j) < Q.zDATAn(1)
-            ifac = dzDATA ./ (Q.zDATAn(i+1) - Q.zRET(j));
-            % extrapolation: denominator is larger than interpolation since
-            % it is from the i+1 point
-        elseif Q.zRET(j) > Q.zDATAn(end)
-            ifac = -dzDATA ./ (Q.zDATAn(i) - Q.zRET(j));
-        else
-            ifac = 0; 
+ll = 0;
+for l = 1:2
+    for jj = ll+1:m+ll
+        j = jj - ll;
+        for i = 1:m1-1
+            if (Q.zRET(j) >= Q.zDATAn(i)) && (Q.zRET(j) < Q.zDATAn(i+1))
+                ifac = dzDATA ./ (Q.zDATAn(i+1) - Q.zRET(j));
+            elseif Q.zRET(j) < Q.zDATAn(1)
+                ifac = dzDATA ./ (Q.zDATAn(i+1) - Q.zRET(j));
+                % extrapolation: denominator is larger than interpolation since
+                % it is from the i+1 point
+            elseif Q.zRET(j) > Q.zDATAn(end)
+                ifac = -dzDATA ./ (Q.zDATAn(i) - Q.zRET(j));
+            else
+                ifac = 0; 
+            end
+            if (Q.zRET(j) >= Q.zDATAnA(i)) && (Q.zRET(j) < Q.zDATAnA(i+1))
+                ifacA = dzDATA ./ (Q.zDATAnA(i+1) - Q.zRET(j));
+            elseif Q.zRET(j) < Q.zDATAnA(1)
+                ifacA = dzDATA ./ (Q.zDATAnA(i+1) - Q.zRET(j));
+                % extrapolation: denominator is larger than interpolation since
+                % it is from the i+1 point
+            elseif Q.zRET(j) > Q.zDATAnA(end)
+                ifacA = -dzDATA ./ (Q.zDATAnA(i) - Q.zRET(j));
+            else
+                ifacA = 0; 
+            end
+            k = i + m1;
+            kk = i + m2;
+            kkk = i + m2+m3;
+            KairA(i,jj) = dSHdnA(i) .* ifacA;
+            KolapA(i,jj) = dSHolapiA(i) .* ifacA;
+            KairA(k,jj) = dSNdnA(i) .* ifacA;
+            KolapA(k,jj) = dSNolapiA(i) .* ifacA;
+            KairD(kk,jj) = dSHdn(i) .* ifac;
+            KolapD(kk,jj) = dSHolapi(i) .* ifac;
+            KairD(kkk,jj) = dSNdn(i) .* ifac;
+            KolapD(kkk,jj) = dSNolapi(i) .* ifac;
         end
-        if (Q.zRET(j) >= Q.zDATAnA(i)) && (Q.zRET(j) < Q.zDATAnA(i+1))
-            ifacA = dzDATA ./ (Q.zDATAnA(i+1) - Q.zRET(j));
-        elseif Q.zRET(j) < Q.zDATAnA(1)
-            ifacA = dzDATA ./ (Q.zDATAnA(i+1) - Q.zRET(j));
-            % extrapolation: denominator is larger than interpolation since
-            % it is from the i+1 point
-        elseif Q.zRET(j) > Q.zDATAnA(end)
-            ifacA = -dzDATA ./ (Q.zDATAnA(i) - Q.zRET(j));
-        else
-            ifacA = 0; 
-        end
-        k = i + m1;
-        kk = i + m2;
-        kkk = i + m2+m3;
-        KairA(i,j) = dSHdnA(i) .* ifacA;
-        KolapA(i,j) = dSHolapiA(i) .* ifacA;
-        KairA(k,j) = dSNdnA(i) .* ifacA;
-        KolapA(k,j) = dSNolapiA(i) .* ifacA;
-        Kair(kk,j) = dSHdn(i) .* ifac;
-        Kolap(kk,j) = dSHolapi(i) .* ifac;
-        Kair(kkk,j) = dSNdn(i) .* ifac;
-        Kolap(kkk,j) = dSNolapi(i) .* ifac;
     end
+    ll = ll + m;
 end
-KairA(m1,1:m) = Kair(m1-1,1:m);
-KolapA(m1,1:m) = KolapA(m1-1,1:m);
-KairA(2*m1,1:m) = KairA(2*m1-1,1:m);
-KolapA(2*m1,1:m) = KolapA(2*m1-1,1:m);
-Kair(m2+m3,1:m) = Kair(m2+m3-1,1:m);
-Kolap(m2+m3,1:m) = Kolap(m2+m3-1,1:m);
-Kair(mdata,1:m) = Kair(mdata-1,1:m);
-Kolap(mdata,1:m) = Kolap(mdata-1,1:m);
+R.Kair = KairD + KairA;
+R.Kolap = KolapD + KolapA;
 
-Kslope = (SH-Q.backH) ./ Q.slope;
-KslopeA = (SHA-Q.backHA) ./ Q.slopeA;
+% KairA(m1,1:m) = Kair(m1-1,1:m);
+% KolapA(m1,1:m) = KolapA(m1-1,1:m);
+% KairA(2*m1,1:m) = KairA(2*m1-1,1:m);
+% KolapA(2*m1,1:m) = KolapA(2*m1-1,1:m);
+% Kair(m2+m3,1:m) = Kair(m2+m3-1,1:m);
+% Kolap(m2+m3,1:m) = Kolap(m2+m3-1,1:m);
+% Kair(mdata,1:m) = Kair(mdata-1,1:m);
+% Kolap(mdata,1:m) = Kolap(mdata-1,1:m);
 
-dSHdSigmaR = -(SH-Q.backH) .* Q.tauR ./ Q.sigmaR; 
-% breaking Rayleigh into 2 parts (for SH and SN)
-dSNdSigmaR = -(SN-Q.backN) .* Q.tauR ./ Q.sigmaR;
-dSHdSigmaH = - (SH-Q.backH) .* Q.tauH ./ Q.sigmaH; % SH ./ Q.sigmaH 
-dSNdSigmaN = - (SN-Q.backN) .* Q.tauN ./ Q.sigmaN; % SN ./ Q.sigmaN
-dSHdSigmaRA = -(SHA-Q.backHA) .* Q.tauRA ./ Q.sigmaR; 
-% breaking Rayleigh into 2 parts (for SH and SN)
-dSNdSigmaRA = -(SNA-Q.backNA) .* Q.tauRA ./ Q.sigmaR;
-dSHdSigmaHA = - (SHA-Q.backHA) .* Q.tauHA ./ Q.sigmaH; % SH ./ Q.sigmaH 
-dSNdSigmaNA = - (SNA-Q.backNA) .* Q.tauNA ./ Q.sigmaN; % SN ./ Q.sigmaN
+% Rayleigh cross section error
+if Q.logAlpha
+    ODj = exp(interp1(Q.zRET,x(m+1:2*m),Q.zDATAn,'linear'));
+    ODjA = exp(interp1(Q.zRET,x(m+1:2*m),Q.zDATAnA,'linear'));
+else
+    ODj = interp1(Q.zRET,x(m+1:2*m),Q.zDATAn,'linear');
+    ODjA = interp1(Q.zRET,x(m+1:2*m),Q.zDATAnA,'linear');
+end
 
-R.KsigmaSHR = dSHdSigmaR;
-R.KsigmaSNR = dSHdSigmaR;
-R.KsigmaN = dSNdSigmaN;
-R.KsigmaH = dSHdSigmaH;
-R.Kair = Kair;
-R.Kslope = Kslope;
-R.Kolap = Kolap;
-R.KsigmaSHRA = dSHdSigmaRA;
-R.KsigmaSNRA = dSHdSigmaRA;
-R.KsigmaNA = dSNdSigmaNA;
-R.KsigmaHA = dSHdSigmaHA;
-R.KairA = KairA;
-R.KslopeA = KslopeA;
-R.KolapA = KolapA;
+dSHAsigmaRay = -((SHA-x(end-3)) .* (ODjA./Q.sigmaR) +...
+    (SHA-x(end-3)).*((ODjA.*(Q.lambdaH./Q.lambda).^-x(end-6))./Q.sigmaH));
+dSNAsigmaRay = -((SNA-x(end-2)) .* (ODjA./Q.sigmaR) +...
+    (SNA-x(end-2)).*((ODjA.*(Q.lambdaN./Q.lambda).^-x(end-6))./Q.sigmaN));
+dSHsigmaRay = -((SH-exp(x(end-1))) .* (ODj./Q.sigmaR) +...
+    (SH-exp(x(end-1))).*((ODj.*(Q.lambdaH./Q.lambda).^-x(end-6))./Q.sigmaH));
+dSNsigmaRay = -((SN-exp(x(end))) .* (ODj./Q.sigmaR) +...
+    (SN-exp(x(end))).*((ODj.*(Q.lambdaN./Q.lambda).^-x(end-6))./Q.sigmaN));
+R.KsigmaRay = [dSHAsigmaRay; dSNAsigmaRay; dSHsigmaRay; dSNsigmaRay]; 
 
-J = Kernel;
+% dSHdSigmaR = -(SH-exp(x(end-1))) .* Q.tauR ./ Q.sigmaR; 
+% % breaking Rayleigh into 2 parts (for SH and SN)
+% dSNdSigmaR = -(SN-exp(x(end))) .* Q.tauR ./ Q.sigmaR;
+% dSHdSigmaH = - (SH-exp(x(end-1))) .* Q.tauH ./ Q.sigmaH; % SH ./ Q.sigmaH 
+% dSNdSigmaN = - (SN-exp(x(end))) .* Q.tauN ./ Q.sigmaN; % SN ./ Q.sigmaN
+% dSHdSigmaRA = -(SHA-x(end-3)) .* Q.tauRA ./ Q.sigmaR; 
+% % breaking Rayleigh into 2 parts (for SH and SN)
+% dSNdSigmaRA = -(SNA-x(end-2)) .* Q.tauRA ./ Q.sigmaR;
+% dSHdSigmaHA = - (SHA-x(end-3)) .* Q.tauHA ./ Q.sigmaH; % SH ./ Q.sigmaH 
+% dSNdSigmaNA = - (SNA-x(end-2)) .* Q.tauNA ./ Q.sigmaN; % SN ./ Q.sigmaN
+
+% slope Jacobian
+KslopeD = (SH-exp(x(end-1))) ./ Q.slope;
+KslopeA = (SHA-x(end-3)) ./ Q.slopeA;
+KslopeNA = zeros(size(KslopeA));
+KslopeN = zeros(size(KslopeD));
+R.Kslope = [KslopeA; KslopeNA; KslopeD; KslopeN];
+
+% R.KsigmaSNR = dSHdSigmaR;
+% R.KsigmaN = dSNdSigmaN;
+% R.KsigmaH = dSHdSigmaH;
+% R.KsigmaSHRA = dSHdSigmaRA;
+% R.KsigmaSNRA = dSHdSigmaRA;
+% R.KsigmaNA = dSNdSigmaNA;
+% R.KsigmaHA = dSHdSigmaHA;
+%R.KairA = KairA;
+%R.KslopeA = KslopeA;
+%R.KolapA = KolapA;
+
 
 if ~isempty(find(isnan(J)) == 1)
     'after FM: Nans in kernel (FMwv(n).m)'
