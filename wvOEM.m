@@ -10,24 +10,25 @@
 % variance to use for analog as well as digital channel.
 
 VERSION = '1-2-1'
-%0305 12: 3000, 1200, 20, 80, 1750, true, true
-%0305 00: 5000, 1300, 20, 80, 1600, true, true
+%0305 12: 3250, 2500, 20, 50, 1250, 360, 360, var:true/false, 300/50, 1/6, logOD
+%0905 12: 7000, 5000, 50, 80, 1500, 90, 90, var:true/true, 50/50, 1/6, OD
+%090600: 15000, 3000, 50, 80, 2300, 360, 360, var:true/false, 1500/50, 1/6, logOD
 date = 20090906; %20090906; %20150305;20090905 (noon), 0906 (midnight)
 nb = '00';
 dextsp = [nb '30'];
-%14000; % 0308 8000/11000; 0305 2500 (day), 5000; 200906 - 14000 200905 7000
-oemStop = 15000; 
-%5000; % 0308 5000; 0305 1300, 1300 (night); 200906 - 5000, 200905 3500 day
-oemStopA = 10000; 
+%14000; % 0308 8000/11000; 0305 2500 (day), 5000; 200906 - 15000 200905 7000
+oemStop = 15000; %0905-7000
+%5000; % 0308 5000; 0305 1300, 1300 (night); 200906 - 10000, 200905 3500 day
+oemStopA = 3000; %0905-5000
 in.LRfree = 50; % was 20 on 0305, 0308 50, 200905-6 50
 in.LRpbl = 80; % 50 on 0305; was 80 on otherwise
 in.LRtranHeight = 2300; %2500; % m, height the above 2 hand off to each other
 % 1800 0308, 0305 2000 (day)/ 1600 ; 200906 - 2300, 200905 1500
-corrLh = 90; % 90 (night) 360 (day); %360; %90 %100;
-corrLalpha = 2000; %90 360; %360; %90 %100 ; % 500 100 2000
+corrLh = 360; % 90 (night) 360 (1/6grid, use 360); %360; %90 %100;
+corrLalpha = 360; %90 0906-2000
 oStretch = 1; % stretch or shrink overlap
 varAV = true;
-varAVA = false; % was f
+varAVA = false; % 0906-false, 0905-true
 % true use variance of average (night) or variance of measurements (day)
 
 dataPath = '/Users/BobSica/Dropbox/matlab/matlabWork/fromMCH/ralmodata/';
@@ -44,7 +45,7 @@ dexts = [nb '00.mat'];
 fext = [nb '30chan2.fig'];
 fextout = [nb '30chan2-v' VERSION '.fig'];
 gext = [nb '30combined.mat'];
-oemGo = 1500; %300; % 300; 50; %50; 20090906-1000
+oemGo = 1500; %300; % 300; 50; %50; 20090906-1500, 20090905-200
 oemGoAreal = 50; %50; % 50; 60; 300; 20090906-50
 zAoffset = 10; % 10 bins, i.e. 10*3.75=37.5 m, make dig and anal heights agree
 oemGoA = oemGoAreal; % + zAoffset;
@@ -68,7 +69,7 @@ if reality
 end
 savefigs = true
 savedat = true
-logAlpha = true; %false;
+logAlpha = true; %false; 0906 true
 logWV = true;
 cf = 3; %tent function on covariance
 mAir = 28.966;
@@ -83,7 +84,7 @@ in.slopeA = in.slope ./ 3; % 3 is nominal, not accurate 2.75;
 % ad hoc factor 3.1096; %./ 2.569 (night); ./ 3.1096 (day)
 % .* (2.76/2*0.9); % ad hoc correction until I get the correct number;
 % units are g/kg, slope is corrected to vmr in makeRealWVlog
-in.coRET = 2; % 2, was 3, this coadds retrieval grid
+in.coRET = 1; % 2, was 3, this coadds retrieval grid
 in.coAddData = 6; % 6
 in.zgo = oemGo;% 59; 0 means start where overlap > 0.1
 %60; % 2500 %1000; %75; % 240; 100; %60;
@@ -162,7 +163,6 @@ x_a = [x1; x2; log(Q.CHpA); log(Q.CNpA); log(Q.CNp); Q.Ang; Q.DeadTimeH; Q.DeadT
 Se = diag(yvar);
 dfacq = 0.5; % percent error in vmr
 %dfacCN = 0.01;
-dfacAir = 0.01;
 dfacSigmaN = 0.003; % ISSI recommend
 dfacSigmaH = 0.003; % ISSI recommend
 dfacSigmaR = 0.003; % ISSI recommend
@@ -178,7 +178,16 @@ dfacOD = 0.5; % 0.25, 0.20;
 dfacAng = 0.01; % 0.05
 dfacCNp = 0.1; % was 0.25;
 dfacCHp = 0.5; 
-dfacOlap = 0.1*exp(-Q.zRET./1000); %0.25; %0.01;
+
+dfacOlap0 = 0.1; %0.25; %0.01;
+varOlapA = (dfacOlap0.*exp(-Q.zDATAnA./1000) .* Q.olapA).^2;
+varOlapD = (dfacOlap0*exp(-Q.zDATAn./1000) .* Q.olap).^2;
+Solap = diag([varOlapA; varOlapA; varOlapD; varOlapD]);
+
+dfacAir = 0.01;
+varAirA = (dfacAir .* Q.nNA./Q.N2rat).^2;
+varAirD = (dfacAir .* Q.nN./Q.N2rat).^2;
+Sair = diag([varAirA; varAirA; varAirD; varAirD]);
 
 if logWV
     varlogq = (dfacq .* ones(size(Q.zRET))).^2;
@@ -192,16 +201,16 @@ if logAlpha
 else
     varAlpha1 = (dfacAlpha .* Q.alphaRret).^2;
 %    'varAlpha2 set to 0 in makeQ11.m'
-    varAlpha2 = (Q.asrCorErrRet).^2;
-    varAlpha = varAlpha1 + varAlpha2;
+%    varAlpha2 = (Q.asrCorErrRet).^2;
+    varAlpha = varAlpha1; % + varAlpha2;
     % 2nd term is uncertainty of baseline for "0" aerosols 
     varOD = (dfacOD .* Q.odRret).^2;
     varOD(1) = varOD(2);
     % can't have variance of 1st value be 0, but Q.odRret(1) = 0
 end 
 
-varOla = (dfacOlap.*Q.olapRET).^2;
-varOlap = [varOla; varOla]; % for 2*m retrieval parameters for Solap
+% varOla = (dfacOlap.*Q.olapRET).^2;
+% varOlap = [varOla; varOla]; % for 2*m retrieval parameters for Solap
 varCNp = dfacCNp.^2; %(dfacCNp .* Q.CNp).^2;
 varCHp = dfacCHp.^2; %(dfacCNp .* Q.CNp).^2;
 varAng = (dfacAng .* Q.Ang).^2;
@@ -223,12 +232,11 @@ dzRET = Q.zRET(2) - Q.zRET(1);
 lc = (round(corrLh ./ dzRET) .* dzRET) .* ones(size(Q.zRET));
 lcalpha = (round(corrLalpha ./ dzRET) .* dzRET) .* ones(size(Q.zRET));
 
-Airvartmp = (dfacAir .* Q.nNret).^2; % only perturbing N2, not air
-Airvar = [Airvartmp; Airvartmp]; % for 2*m retrieval parameters
+% Airvartmp = (dfacAir .* Q.nNret).^2; % only perturbing N2, not air
+% Airvar = [Airvartmp; Airvartmp]; % for 2*m retrieval parameters
 
-S_a = zeros(n,n);
-Sair = zeros(n,n);
-Solap = zeros(n,n);
+%Sair = zeros(n,n);
+%Solap = zeros(n,n);
 
 SsigmaN = (dfacSigmaN.*Q.sigmaN).^2;
 SsigmaH = (dfacSigmaH.*Q.sigmaH).^2;
@@ -242,11 +250,13 @@ Sslope = (dfacSlope.*Q.slope).^2;
 % mvarH = find(Q.zDATAn > in.maskHigh);
 % mvarLR = find(Q.zRET < in.maskLow);
 % mvarHR = find(Q.zRET > in.maskHigh);
+
+S_a = zeros(n,n);
 for i=1:m
     for j=1:m
         sigprod = sqrt(vars2(i) .* vars2(j));
-        sigAirvar = sqrt(Airvar(i) .* Airvar(j));
-        sigOlapvar = sqrt(varOlap(i) .* varOlap(j));
+%        sigAirvar = sqrt(Airvar(i) .* Airvar(j));
+%        sigOlapvar = sqrt(varOlap(i) .* varOlap(j));
         diffz = Q.zRET(i) - Q.zRET(j);
         sumlc = lc(i) + lc(j);
         shape(1) = exp(-(2.*diffz./sumlc).^2); %Gaussian correlation function
@@ -256,16 +266,16 @@ for i=1:m
             shape(3) = 0;
         end
         S_a(i,j) = sigprod .* shape(cf); %Gaussian correlation function
-        Sair(i,j) = sigAirvar .* shape(cf);
-        Solap(i,j) = sigOlapvar .* shape(cf);
+%        Sair(i,j) = sigAirvar .* shape(cf);
+%        Solap(i,j) = sigOlapvar .* shape(cf);
     end
 end
 % using different correlation length for alpha
 for i=m+1:2*m
     for j=m+1:2*m
         sigprod = sqrt(vars2(i) .* vars2(j));
-        sigAirvar = sqrt(Airvar(i) .* Airvar(j));
-        sigOlapvar = sqrt(varOlap(i) .* varOlap(j));
+ %       sigAirvar = sqrt(Airvar(i) .* Airvar(j));
+ %       sigOlapvar = sqrt(varOlap(i) .* varOlap(j));
         diffz = Q.zRET(i-m) - Q.zRET(j-m);
         sumlc = lcalpha(i-m) + lcalpha(j-m);
         shape(1) = exp(-(2.*diffz./sumlc).^2); %Gaussian correlation function
@@ -275,8 +285,8 @@ for i=m+1:2*m
             shape(3) = 0;
         end
         S_a(i,j) = sigprod .* shape(cf); %.* shape(cf); %Gaussian correlation function
-        Sair(i,j) = sigAirvar .* shape(cf);
-        Solap(i,j) = sigOlapvar .* shape(cf);
+%       Sair(i,j) = sigAirvar .* shape(cf);
+%        Solap(i,j) = sigOlapvar .* shape(cf);
     end
 end
 
@@ -294,7 +304,8 @@ S_a(n,n) = vars2(n);
 S_ainv = [];
 Seinv = [];
 
-[X,R] = oem(O,Q,R,@makeR,S_a,Se,S_ainv,Seinv,x_a,y);
+[X,R] = oem(O,Q,R,@makeJ,S_a,Se,S_ainv,Seinv,x_a,y);
+R  = makeParameterJacobians(Q,X.x);
 if logWV
     X.vmr = exp(X.x(1:m));
 else
@@ -372,22 +383,23 @@ SxSlope = X.G*R.Kslope*Sslope*R.Kslope'*X.G';
 SxOlap = X.G*R.Kolap*Solap*R.Kolap'*X.G';
 
 sigmaRayErrq = sqrt(diag(Sxsigma(1:m,1:m)));
-% sigmaHerrq = sqrt(diag(SxsigmaH(1:m,1:m)));
-% sigmaRerrHq = sqrt(diag(SxsigmaSHR(1:m,1:m)));
-% sigmaRerrNq = sqrt(diag(SxsigmaSNR(1:m,1:m)));
-
 AirErrq = sqrt(diag(SxAir(1:m,1:m)));
-%AirerrN = sqrt(diag(SxAirN(1:m,1:m)));
 SlopeErrq = sqrt(diag(SxSlope(1:m,1:m)));
+OlapErrq = sqrt(diag(SxOlap(1:m,1:m)));
 
-%OlaperrH = sqrt(diag(SxOlapH(1:m,1:m)));
-OlapErrq = sqrt(diag(abs(SxOlap(1:m,1:m)))); 
+sigmaRayErro = sqrt(diag(Sxsigma(m+1:2*m,m+1:2*m)));
+AirErro = sqrt(diag(SxAir(m+1:2*m,m+1:2*m)));
+SlopeErro = sqrt(diag(SxSlope(m+1:2*m,m+1:2*m)));
+OlapErro = sqrt(diag(SxOlap(m+1:2*m,m+1:2*m)));
 
 % smoothing error removed: +(X.es(mbL:mbH)).^2, +(OlaperrH(mbL:mbH)).^2,
 % +(AirerrN(mbL:mbH)).^2+(sigmaRerrH(mbL:mbH)).^2+(sigmaRerrN(mbL:mbH)).^2
 % +(sigmaHerrq(mbL:mbH)).^2
 totErrq = sqrt((X.eo(mbL:mbH)).^2+(sigmaRayErrq(mbL:mbH)).^2....
     +(AirErrq(mbL:mbH)).^2+(SlopeErrq(mbL:mbH)).^2+(OlapErrq(mbL:mbH)).^2);
+% presumes log retrieval for OD
+totErro = sqrt((X.eo(mbL+m:mbH+m)).^2+(sigmaRayErro(mbL:mbH)).^2....
+    +(AirErro(mbL:mbH)).^2+(SlopeErro(mbL:mbH)).^2+(OlapErro(mbL:mbH)).^2);
 
 % output to screen
 disp(' ')
@@ -510,6 +522,9 @@ unit = ones(size(Q.zRET(mbL:mbH)));
 response = X.A(mbL:mbH,mbL:mbH)*unit;
 fak = find(diag(X.A(mbL:mbH,mbL:mbH)) >= 0.8);
 fak2 = find(response >= 0.8);
+if isempty(fak2)
+    fak2 = 1;
+end
 fakvec = [fak(end); fak2(end); finiDoF];
 fini = max(fakvec);
 %plot(response,Q.zRET(mbL:mbH)./1000,'r:')
@@ -736,8 +751,8 @@ plot(exp(-xAlpha(mbL:mbH)),Q.zRET(mbL:mbH)./1000)
 plot(Q.tauRnoA,Q.zDATAnA./1000,'g')
 xlabel('Transmission (355 nm)')
 ylabel('Altitude (km)')
-hleg = legend('aerosol: a priori','aersol','molecular',...
-    'Location','SouthWest');
+hleg = legend('a prioiri aerosol','retrieved aerosol','molecular',...
+    'Location','Best');
 set(hleg,'FontSize',8);
 plot(Q.tauRno,Q.zDATAn./1000,'g')
 pltx = get(gca,'XLim');
@@ -758,10 +773,18 @@ hold on
 plot(xAlpha(mbL:mbH),Q.zRET(mbL:mbH)./1000)
 xlabel('Optical Depth at 355 nm')
 ylabel('Altitude (km)')
-legend('a priori','Retrieval')
-hold on
+legend('a priori','Retrieval','Location','NorthWest')
+if logAlpha
+    Tup = xAlpha(mbL:mbH)+exp(-xAlpha(mbL:mbH)).*sqrt((X.eo(mbL+m:mbH+m))); %totErro;
+    Tdn = xAlpha(mbL:mbH)-exp(-xAlpha(mbL:mbH)).*sqrt((X.eo(mbL+m:mbH+m))); %totErro;
+else
+    Tup = xAlpha(mbL:mbH) + sqrt((X.eo(mbL+m:mbH+m)));
+    Tdn = xAlpha(mbL:mbH) - sqrt((X.eo(mbL+m:mbH+m)));
+end
+jbfilly(Q.zRET(mbL:mbH)'./1000,Tup',Tdn','r','r',0,.25);
 pltx = get(gca,'XLim');
 plot(pltx,[Q.zRET(fini) Q.zRET(fini)]./1000,'k--')
+
 subplot(1,2,2)
 xaAlphaD = interp1(Q.zRET(mbL:mbH),xaAlpha(mbL:mbH),Q.zDATAn,'linear');
 xAlphaD = interp1(Q.zRET(mbL:mbH),xAlpha(mbL:mbH),Q.zDATAn,'linear');
@@ -793,7 +816,7 @@ legend('Optical Depth Smoothing','Optical Depth Total')
 % plot errors
 handfig(11) = figure;
 % note since X.x is the log(vmr), sigma_X.x = sigma_vmr / vmr
-subplot(1,2,1)
+%subplot(1,2,1)
 plot(X.eo(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000)
 hold on
 %plot(X.es(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000)
@@ -810,34 +833,42 @@ plot(totErrq.*100,Q.zRET(mbL:mbH)./1000,'k')
 hleg = legend('Statistical','\sigma_{Rayleigh}', 'Air Density',...
     'Calibration','Overlap','Total','Location','Best');
 set(hleg,'FontSize',8);
-xlabel('Uncertainty (%)')
+xlabel('Mixing Ratio Uncertainty (%)')
 ylabel('Altitude (km)')
 pltx = get(gca,'XLim');
 plot(pltx,[Q.zRET(fini) Q.zRET(fini)]./1000,'k--')
 %xlim([0 50])
 
-subplot(1,2,2)
-plot(X.eo(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000)
+figure
+%subplot(1,2,2)
+plot(X.eo(mbL+m:mbH+m).*100,Q.zRET(mbL:mbH)./1000)
 hold on
 %plot(X.es(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000)
-plot(sigmaRayErrq(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
+plot(sigmaRayErro(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
 % plot(sigmaRerrN(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
 % plot(sigmaHerr(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
 % plot(sigmaNerr(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
-plot(AirErrq(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
+plot(AirErro(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
 %plot(AirerrN(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
-plot(SlopeErrq(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
+plot(SlopeErro(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
 %plot(OlaperrH(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'-.')
-plot(OlapErrq(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'-.')
-plot(totErrq.*100,Q.zRET(mbL:mbH)./1000,'k')
+plot(OlapErro(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'-.')
+plot(totErro.*100,Q.zRET(mbL:mbH)./1000,'k')
 hleg = legend('Statistical','\sigma_{Rayleigh}', 'Air Density',...
     'Calibration','Overlap','Total','Location','Best');
 set(hleg,'FontSize',8);
-xlabel('Uncertainty (%)')
+xlabel('Optical Depth Uncertainty (%)')
 ylabel('Altitude (km)')
 pltx = get(gca,'XLim');
 plot(pltx,[Q.zRET(fini) Q.zRET(fini)]./1000,'k--')
-xlim([0 2])
+%xlim([0 2])
+
+handfig(12) = figure;
+plot(Q.asrDATA(20:end),Q.zDATAn(20:end)./1000,'b')
+hold on
+plot(Q.asrDATAA,Q.zDATAnA./1000,'b')
+xlabel('Aerosol Scatering Ratio')
+ylabel('Altitude (km)')
 
 if savedat
     Qwv = Q;
@@ -851,3 +882,4 @@ if savefigs
     savefig(handfig,[outPath 'wvOEM' int2str(date) fextout])
 end
 diary off
+

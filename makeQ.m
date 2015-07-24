@@ -316,10 +316,10 @@ LRA = in.LRfree * ones(size(asrDATAA));
 fffA = find(zNA < in.LRtranHeight);
 LRA(fffA) = in.LRpbl;
 
-'unsmoothed a prior ASR'
+%'unsmoothed a prior ASR'
 %asrDATAs = asrDATA;
-asrDATAs = asrDATA; %smooth(asrDATA,90); %was 45
-asrDATAsA = asrDATAA; %smooth(asrDATAA,90);
+asrDATAs = smooth(asrDATA,11); %asrDATA; %smooth(asrDATA,90); %was 45
+asrDATAsA = smooth(asrDATAA,11); %asrDATAA; %smooth(asrDATAA,90);
 %'smooth a priori for asr' fend = find(asrDATA == 1); plin =
 %polyfit(zN(1:fend(1)),asrDATA(1:fend(1)),1); asrDATAs = polyval(plin,zN);
 fneg = find(asrDATAs < 1);
@@ -330,7 +330,7 @@ asrDATAsA(fnegA) = 1;
 %asrDATAs(basr) = 0;
 alphaAer = LR .* (beta_mol_DATA .* (asrDATAs-1));
 znoAer = find(zN > 15000); % was 3000 for 20130122
-alphaAer(znoAer) = 0;
+alphaAer(znoAer) = 1e-12;
 'asr set to 0 > 15000'
 %if in.logAlpha
     fl0 = find(alphaAer <= 0);
@@ -339,6 +339,10 @@ alphaAer(znoAer) = 0;
 alphaAerA = LRA .* (beta_mol_DATAA .* (asrDATAsA-1));
 fl0A = find(alphaAerA <= 0);
 alphaAerA(fl0A) = 1e-12;
+
+% 'fixed extinction = molecular'
+% alphaAer = 61e-6.*ones(size(zN));
+% alphaAerA = 61e-6.*ones(size(zNA));
 
 %'setting extinction = 0' alphaAer = zeros(size(zN)); 'ad hoc extinction'
 %alphaAer = 1e-5.*ones(size(zN)); alphaAer = alphaAer./10; alphaCorErr =
@@ -652,8 +656,10 @@ Q.mAir = mAir;
 Q.mWV = mWV;
 %'fix Q.alphaRdata'
 Q.alphaRdata = alphaAer;
+Q.asrDATA = asrDATAs(1:dendN(end));
+Q.asrDATAA = asrDATAsA(1:dendNA(end));
 %Q.tauRdata = tauAer; Q.alphaRdata = alpha_mol_DATA(1:dendN(end))./10;
-%Q.asrCorErr = asrCorErr;
+Q.asrCorErr = alphaCorErr;
 Q.alphaCorErr = alphaCorErr;
 Q.mzsnd = zsndASL;
 %Q.nsndi = nsndi; Q.LR = LR(1:dendN(end)); Q.beta_mol_DATA =
@@ -701,7 +707,8 @@ nzRET = N2rat .* exp(interp1(zsndASL,log(nsndi),zRET,'linear'));
 Q.nNret = nzRET; % Leblanc et al
 Q.alphaRret = interp1(zN,alphaAer,Q.zRET,'linear','extrap');
 Q.alphaRdata = alphaAer(1:dendN(end));
-Q.asrCorErrRet = alphaCorErr; 
+
+%Q.asrCorErrRet = alphaCorErr; 
 Q.odRret = interp1(zN,odAer,Q.zRET,'linear', .1.*odAer(1)); %'extrap');
 Q.odRdata = odAer(1:dendN(end));
 
@@ -776,8 +783,8 @@ Q.wvTrad = in.slope .* (Q.tauH./Q.tauN) .* ((Q.yTrueH - Q.backTH)...
 Q.wvTradNo = in.slope .* (Q.tauHno(1:dendN(end))...
     ./ Q.tauNno(1:dendN(end)))...
     .* ((Q.yTrueH - Q.backTH)./(Q.yTrueN - Q.backTN));
-Q.wvTradNoA = in.slopeA .* (Q.tauHno(1:dendNA(end))...
-    ./ Q.tauNno(1:dendNA(end)))...
+Q.wvTradNoA = in.slopeA .* (Q.tauHnoA(1:dendNA(end))...
+    ./ Q.tauNnoA(1:dendNA(end)))...
     .* ((Q.SHcoaddA - Q.backHA)./(Q.SNcoaddA - Q.backNA));
 % lwvTradNoA = in.slopeA .* (Q.tauHno(1:dendNA(end))...
 %     ./ Q.tauNno(1:dendNA(end)))...
