@@ -9,26 +9,37 @@
 % variance is allowed to be < background variance. New flag for which background
 % variance to use for analog as well as digital channel.
 
-VERSION = '1-2-1'
+VERSION = '2-0-0'
+%v2-0-0
+%090600: 17500, 12000, 50, 80, 2300, 787.5, 787.5, var:true/false, 52.5*29/52.5, 3/5, OD
+%0905 12: 17500, 12000, 50, 80, 1500, 787.5, 787.5, var:true/false, 52.5*6/52.5, 3/5, OD
+%0305 12: 17500, 12000, 20, 50, 1250, 787.5, 787.5, var:true/false, 52.5/52.5, 3/5, OD
+% cutoff: 0305: 3, 0905: 2, 0906: 2
+
+%v1-2-1
 %0305 12: 3250, 2500, 20, 50, 1250, 360, 360, var:true/false, 300/50, 1/6, logOD
 %0905 12: 7000, 5000, 50, 80, 1500, 90, 90, var:true/true, 50/50, 1/6, OD
 %090600: 15000, 3000, 50, 80, 2300, 360, 360, var:true/false, 1500/50, 1/6, logOD
-date = 20090906; %20090906; %20150305;20090905 (noon), 0906 (midnight)
-nb = '00';
+date = 20090905; %20090906; %20150305;20090905 (noon), 0906 (midnight)
+nb = '12';
 dextsp = [nb '30'];
 %14000; % 0308 8000/11000; 0305 2500 (day), 5000; 200906 - 15000 200905 7000
-oemStop = 15000; %0905-7000
+oemStop = 17500; %0905-7000
 %5000; % 0308 5000; 0305 1300, 1300 (night); 200906 - 10000, 200905 3500 day
-oemStopA = 3000; %0905-5000
+oemStopA = 12000; %0905-5000
+coRET = 3;
+coAddData = 5;
+oemGo = 6*(3.5.*coRET.*coAddData); %300; % 300; 50; %50; 20090906-1500, 20090905-200
+oemGoAreal = 1*(3.5.*coRET.*coAddData); %50; % 50; 60; 300; 20090906-50
 in.LRfree = 50; % was 20 on 0305, 0308 50, 200905-6 50
 in.LRpbl = 80; % 50 on 0305; was 80 on otherwise
-in.LRtranHeight = 2300; %2500; % m, height the above 2 hand off to each other
+in.LRtranHeight = 1500; %2500; % m, height the above 2 hand off to each other
 % 1800 0308, 0305 2000 (day)/ 1600 ; 200906 - 2300, 200905 1500
-corrLh = 360; % 90 (night) 360 (1/6grid, use 360); %360; %90 %100;
-corrLalpha = 360; %90 0906-2000
-oStretch = 1; % stretch or shrink overlap
+corrLh = 787.5; % 90 (night) 360 (1/6grid, use 360); %360; %90 %100;
+corrLalpha = 787.5; %90 0906-2000
 varAV = true;
 varAVA = false; % 0906-false, 0905-true
+uFakvec = 2; % 0 use max, 1 is 0.8 cut, 2 is sum 0.8, 3 is Dof
 % true use variance of average (night) or variance of measurements (day)
 
 dataPath = '/Users/BobSica/Dropbox/matlab/matlabWork/fromMCH/ralmodata/';
@@ -45,8 +56,6 @@ dexts = [nb '00.mat'];
 fext = [nb '30chan2.fig'];
 fextout = [nb '30chan2-v' VERSION '.fig'];
 gext = [nb '30combined.mat'];
-oemGo = 1500; %300; % 300; 50; %50; 20090906-1500, 20090905-200
-oemGoAreal = 50; %50; % 50; 60; 300; 20090906-50
 zAoffset = 10; % 10 bins, i.e. 10*3.75=37.5 m, make dig and anal heights agree
 oemGoA = oemGoAreal; % + zAoffset;
 pieceWise = true;
@@ -56,6 +65,7 @@ dfacDeadN = dfacDeadH; %0.01;
 deadTimeN = 4;
 normStop = 25000;
 aposteriori = false; % if true use a posteriori analog variance
+oStretch = 1; % stretch or shrink overlap
 % varMask = 0; % variance increase
 % maskLow = 100000; %500; % height of low mask
 % maskHigh = 0; % height of high mask
@@ -69,7 +79,7 @@ if reality
 end
 savefigs = true
 savedat = true
-logAlpha = true; %false; 0906 true
+logAlpha = false; %false; 0906 true
 logWV = true;
 cf = 3; %tent function on covariance
 mAir = 28.966;
@@ -84,8 +94,8 @@ in.slopeA = in.slope ./ 3; % 3 is nominal, not accurate 2.75;
 % ad hoc factor 3.1096; %./ 2.569 (night); ./ 3.1096 (day)
 % .* (2.76/2*0.9); % ad hoc correction until I get the correct number;
 % units are g/kg, slope is corrected to vmr in makeRealWVlog
-in.coRET = 1; % 2, was 3, this coadds retrieval grid
-in.coAddData = 6; % 6
+in.coRET = coRET; % 2, was 3, this coadds retrieval grid
+in.coAddData = coAddData; % 6
 in.zgo = oemGo;% 59; 0 means start where overlap > 0.1
 %60; % 2500 %1000; %75; % 240; 100; %60;
 in.zgoA = oemGoA;
@@ -110,6 +120,7 @@ in.oStretch = oStretch;
 in.zAoffset = zAoffset;
 in.corrLh = corrLh;
 in.corrLalpha = corrLalpha;
+in.uFakvec = uFakvec;
 in.dext = dext
 
 % initialize R, retrieval structure, for Q.pack, though we don't use this
@@ -525,8 +536,12 @@ fak2 = find(response >= 0.8);
 if isempty(fak2)
     fak2 = 1;
 end
-fakvec = [fak(end); fak2(end); finiDoF];
-fini = max(fakvec);
+fakvec = [fak(end); fak2(end); finiDoF]'
+if uFakvec == 0
+    fini = max(fakvec(3));
+else
+    fini = fakvec(uFakvec);
+end
 %plot(response,Q.zRET(mbL:mbH)./1000,'r:')
 set(hk,'LineWidth',0.5)
 xlabel('WV Averaging Kernel')
@@ -745,26 +760,35 @@ legend('OEM','RALMO')
 ylabel('Altitude (km)')
 
 handfig(8) = figure;
-plot(exp(-xaAlpha(mbL:mbH)),Q.zRET(mbL:mbH)./1000)
+xaAlphaD = interp1(Q.zRET(mbL:mbH),xaAlpha(mbL:mbH),Q.zDATAn,'linear');
+xAlphaD = interp1(Q.zRET(mbL:mbH),xAlpha(mbL:mbH),Q.zDATAn,'linear');
+alp = derivative(xAlphaD(3:end-2))./derivative(Q.zDATAn(3:end-2));
+alpRET = derivative(xAlpha(mbL:mbH))./derivative(Q.zRET(mbL:mbH));
+alpR = derivative(-log(Q.tauRno))./derivative(Q.zDATAn);
+salp = smooth(alpRET,19);
+plot(alpR*1e6,Q.zDATAn./1000)
 hold on
-plot(exp(-xAlpha(mbL:mbH)),Q.zRET(mbL:mbH)./1000)
-plot(Q.tauRnoA,Q.zDATAnA./1000,'g')
-xlabel('Transmission (355 nm)')
-ylabel('Altitude (km)')
-hleg = legend('a prioiri aerosol','retrieved aerosol','molecular',...
-    'Location','Best');
-set(hleg,'FontSize',8);
-plot(Q.tauRno,Q.zDATAn./1000,'g')
-pltx = get(gca,'XLim');
-plot(pltx,[Q.zRET(fini) Q.zRET(fini)]./1000,'k--')
+plot(salp*1e6,Q.zRET(mbL:mbH)./1000)
+xlabel 'Extinction (10^{6} m^{-1})'
+ylabel 'Altitude(km)'
+%title 'Extinction'
+legend('Molecular','Aerosol')
+plot([0 0],[0 round(Q.zDATAn(end)./1000)],'k:')
 if logAlpha
+    'bad option in extinction plot'
+    sttoopppp
     Tup = exp(-xAlpha(mbL:mbH))+exp(-xAlpha(mbL:mbH)).*sqrt((X.eo(mbL+m:mbH+m)));
     Tdn = exp(-xAlpha(mbL:mbH))-exp(-xAlpha(mbL:mbH)).*sqrt((X.eo(mbL+m:mbH+m)));
 else
-    Tup = exp(-xAlpha(mbL:mbH)) + sqrt((X.eo(mbL+m:mbH+m)));
-    Tdn = exp(-xAlpha(mbL:mbH)) - sqrt((X.eo(mbL+m:mbH+m)));
+%    Tup = alpRET + sqrt(2.*(X.eo(mbL+m:mbH+m))./derivative(Q.zRET(mbL:mbH))); 
+    % 2 times is from derivative
+    Tup = alpRET + sqrt(2.*abs(X.eo(mbL+m:mbH+m)./xAlpha(mbL:mbH))).*alpRET;
+    Tdn = alpRET - sqrt(2.*abs(X.eo(mbL+m:mbH+m)./xAlpha(mbL:mbH))).*alpRET;
 end
-jbfilly(Q.zRET(mbL:mbH)'./1000,Tup',Tdn','r','r',0,.25);
+jbfilly(Q.zRET(mbL:mbH)'./1000,1e6.*smooth(Tup,20)',1e6.*smooth(Tdn,20)'...
+    ,'r','r',0,.25);
+pltx = get(gca,'XLim');
+plot(pltx,[Q.zRET(fini) Q.zRET(fini)]./1000,'k--')
 
 handfig(9) = figure;
 subplot(1,2,1)
@@ -786,19 +810,26 @@ pltx = get(gca,'XLim');
 plot(pltx,[Q.zRET(fini) Q.zRET(fini)]./1000,'k--')
 
 subplot(1,2,2)
-xaAlphaD = interp1(Q.zRET(mbL:mbH),xaAlpha(mbL:mbH),Q.zDATAn,'linear');
-xAlphaD = interp1(Q.zRET(mbL:mbH),xAlpha(mbL:mbH),Q.zDATAn,'linear');
-alp = derivative(xAlphaD(3:end-2))./derivative(Q.zDATAn(3:end-2));
-alpR = derivative(-log(Q.tauRno))./derivative(Q.zDATAn);
-salp = smooth(alp,10);
-plot(alpR*1e6,Q.zDATAn./1000)
+plot(exp(-xaAlpha(mbL:mbH)),Q.zRET(mbL:mbH)./1000)
 hold on
-plot(salp*1e6,Q.zDATAn(3:end-2)./1000)
-xlabel 'Extinction (10^{6} m^{-1})'
-ylabel 'Altitude(km)'
-title 'Extinction'
-legend('Molecular Extinction','Aerosol Extinction')
-plot([0 0],[0 round(Q.zDATAn(end)./1000)],'k:')
+plot(exp(-xAlpha(mbL:mbH)),Q.zRET(mbL:mbH)./1000)
+plot(Q.tauRnoA,Q.zDATAnA./1000,'g')
+xlabel('Transmission (355 nm)')
+ylabel('Altitude (km)')
+hleg = legend('a prioiri aerosol','retrieved aerosol','molecular',...
+    'Location','Best');
+set(hleg,'FontSize',8);
+plot(Q.tauRno,Q.zDATAn./1000,'g')
+pltx = get(gca,'XLim');
+plot(pltx,[Q.zRET(fini) Q.zRET(fini)]./1000,'k--')
+if logAlpha
+    Tup = exp(-xAlpha(mbL:mbH))+exp(-xAlpha(mbL:mbH)).*sqrt((X.eo(mbL+m:mbH+m)));
+    Tdn = exp(-xAlpha(mbL:mbH))-exp(-xAlpha(mbL:mbH)).*sqrt((X.eo(mbL+m:mbH+m)));
+else
+    Tup = exp(-xAlpha(mbL:mbH)) + sqrt((X.eo(mbL+m:mbH+m)));
+    Tdn = exp(-xAlpha(mbL:mbH)) - sqrt((X.eo(mbL+m:mbH+m)));
+end
+jbfilly(Q.zRET(mbL:mbH)'./1000,Tup',Tdn','r','r',0,.25);
 
 handfig(10) = figure;
 hold on

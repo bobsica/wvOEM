@@ -2,7 +2,7 @@
 
 date = 20090905; %20150305;
 nb = '12'; % '00'
-VERSION = '1-2-1';
+VERSION = '2-0-0';
 outPath = '/Users/BobSica/Dropbox/matlab/matlabWork/fromMCH/ralmoOEMwvOutput/';
 fextout = [nb '30chan2-v' VERSION '.fig'];
 fextout2 = [nb '30chan2-v' VERSION '-pubPlt.fig'];
@@ -15,13 +15,14 @@ hfig(1) = figure(1);
 set(gcf,'Units','inches')
 set(gcf,'Position', [1 1 5.75 4.3125]); % [1" 1" xwidth ywidth], y=0.75*x
 subplot(1,2,1)
-xlim([0.05 0.08]); % 0.04 0.075
+xlim([1.5 2.3]); % 0.04 0.075
 set(gca,'FontSize',9);
 legend off
 subplot(1,2,2)
-set(gca,'XScale','linear')
-xlim([0 50]); % 1e-5 100
-%set(gca,'XTick',[.0001 .01 1 10])
+set(gca,'XScale','log')
+xlim([1 100]); % 1e-5 100
+set(gca,'XTick',[1 10 100])
+set(gca,'XMinorTick','off')
 %set(gca,'XTick',[1 10 100])
 set(gca,'FontSize',9);
 legend off
@@ -34,15 +35,19 @@ set(gcf,'Units','inches')
 set(gcf,'Position', [1 1 5.75 4.3125]);
 subplot(2,2,1)
 title ''
+ylim([0 7])
 set(gca,'FontSize',9);
 subplot(2,2,2)
 title ''
+ylim([0 7])
 set(gca,'FontSize',9);
 subplot(2,2,3)
 title ''
+ylim([0 7])
 set(gca,'FontSize',9);
 subplot(2,2,4)
 title ''
+ylim([0 7])
 set(gca,'FontSize',9);
 fn = [outPlot 'wvOEM' int2str(date) dextout '-jacobians.pdf'];
 export_fig(fn, '-pdf', '-nocrop')
@@ -53,9 +58,11 @@ set(gcf,'Units','inches')
 set(gcf,'Position', [1 1 5.75 4.3125]);
 subplot(1,2,1)
 title ''
+ylim([0 12])
 set(gca,'FontSize',9);
 subplot(1,2,2)
 title ''
+ylim([0 12])
 set(gca,'FontSize',9);
 fn = [outPlot 'wvOEM' int2str(date) dextout '-avKernels.pdf'];
 export_fig(fn, '-pdf', '-nocrop')
@@ -65,7 +72,8 @@ hfig(4) = figure(4);
 set(gcf,'Units','inches')
 set(gcf,'Position', [1 1 3.25 2.4375]);
 set(gca,'FontSize',9);
-xlim([0 500])
+xlim([0 600])
+ylim([0 7])
 fn = [outPlot 'wvOEM' int2str(date) dextout '-vertRes.pdf'];
 export_fig(fn, '-pdf', '-nocrop')
 
@@ -75,15 +83,19 @@ set(gcf,'Units','inches')
 set(gcf,'Position', [1 1 5.75 4.3125]);
 subplot(2,2,1)
 set(gca,'FontSize',9);
+ylim([0 7])
 subplot(2,2,2)
 set(gca,'FontSize',9);
+ylim([0 7])
 subplot(2,2,3)
 set(gca,'FontSize',9);
 %axis([-150 150 2.5 14]);  % 2500 only
 xlim([-1 1])
+ylim([0 7])
 subplot(2,2,4)
 set(gca,'FontSize',9);
-xlim([-2.5 2.5])
+xlim([-3 3])
+ylim([0 7])
 fn = [outPlot 'wvOEM' int2str(date) dextout '-residuals.pdf'];
 export_fig(fn, '-pdf', '-nocrop')
 
@@ -100,9 +112,13 @@ ho = findobj(gca,'Color','c');
 set(ho,'Color','none')
 set(ho,'LineStyle','none');
 ho = findobj(gca,'Color','g');
-set(ho,'LineWidth',2)
+set(ho,'LineWidth',1)
+ho = findobj(gca,'Color','r');
+set(ho,'LineWidth',1)
+ho = findobj(gca,'Color','b');
+set(ho,'LineWidth',1)
 xlim([1e-1 10]); % 0905 [1e-1 10]
-%ylim([2.5 14]); % 2500 case only
+ylim([0 7])
 fn = [outPlot 'wvOEM' int2str(date) dextout '-wvmmr.pdf'];
 export_fig(fn, '-pdf', '-nocrop')
 
@@ -110,15 +126,28 @@ export_fig(fn, '-pdf', '-nocrop')
 hfig(7) = figure(11);
 set(gcf,'Units','inches')
 set(gcf,'Position', [1 1 5.75 4.3125]);
-subplot(1,2,1)
 set(gca,'FontSize',9);
-hh = legend;
-set(hh,'Box','off')
-subplot(1,2,2)
-set(gca,'XTick',[0 1 2])
-set(gca,'FontSize',9);
+ylim([0 7])
+xlim([0 25])
 fn = [outPlot 'wvOEM' int2str(date) dextout '-errors.pdf'];
 export_fig(fn, '-pdf', '-nocrop')
+
+% ASR
+hfig(8) = figure(12);
+set(gcf,'Units','inches')
+set(gcf,'Position', [1 1 3.25 2.4375]);
+set(gca,'FontSize',9);
+ylim([0 7])
+
+% Extinction
+hfig(9) = figure(8);
+set(gcf,'Units','inches')
+set(gcf,'Position', [1 1 3.25 2.4375]);
+set(gca,'FontSize',9);
+ho = findobj(gca,'LineStyle',':');
+set(ho,'LineStyle','none')
+xlim([0 600])
+ylim([0 7])
 
 savefig(hfig,[outPlot 'wvOEM' int2str(date) fextout2])
   
