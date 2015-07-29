@@ -17,6 +17,7 @@ set(gcf,'Position', [1 1 5.75 4.3125]); % [1" 1" xwidth ywidth], y=0.75*x
 subplot(1,2,1)
 xlim([1.5 2.3]); % 0.04 0.075
 set(gca,'FontSize',9);
+xlabel('ADC Count Rate (MHz)')
 legend off
 subplot(1,2,2)
 set(gca,'XScale','log')
@@ -25,6 +26,7 @@ set(gca,'XTick',[1 10 100])
 set(gca,'XMinorTick','off')
 %set(gca,'XTick',[1 10 100])
 set(gca,'FontSize',9);
+xlabel('Photocount Rate (MHz)')
 legend off
 fn = [outPlot 'wvOEM' int2str(date) dextout '-rawCounts.pdf'];
 export_fig(fn, '-pdf', '-nocrop')
@@ -35,20 +37,24 @@ set(gcf,'Units','inches')
 set(gcf,'Position', [1 1 5.75 4.3125]);
 subplot(2,2,1)
 title ''
+xlabel('Jacobian (ADC counts/bin/1800 shots)')
 ylim([0 7])
-set(gca,'FontSize',9);
+set(gca,'FontSize',8);
 subplot(2,2,2)
 title ''
+xlabel('Jacobian (ADC counts/bin/1800 shots)')
 ylim([0 7])
-set(gca,'FontSize',9);
+set(gca,'FontSize',8);
 subplot(2,2,3)
 title ''
 ylim([0 7])
-set(gca,'FontSize',9);
+xlabel('Jacobian (photocounts/bin/1800 shots)')
+set(gca,'FontSize',8);
 subplot(2,2,4)
 title ''
 ylim([0 7])
-set(gca,'FontSize',9);
+set(gca,'FontSize',8);
+xlabel('Jacobian (photocounts/bin/1800 shots)')
 fn = [outPlot 'wvOEM' int2str(date) dextout '-jacobians.pdf'];
 export_fig(fn, '-pdf', '-nocrop')
 
@@ -85,18 +91,22 @@ set(gcf,'Position', [1 1 5.75 4.3125]);
 subplot(2,2,1)
 set(gca,'FontSize',9);
 ylim([0 7])
+xlabel('H_2O Analog (%)')
 subplot(2,2,2)
 set(gca,'FontSize',9);
 ylim([0 7])
+xlabel('N_2 Analog (%)')
 subplot(2,2,3)
 set(gca,'FontSize',9);
 %axis([-150 150 2.5 14]);  % 2500 only
 xlim([-1 1])
 ylim([0 7])
+xlabel('H_2O Digital (%)')
 subplot(2,2,4)
 set(gca,'FontSize',9);
 xlim([-3 3])
 ylim([0 7])
+xlabel('N_2 Digital (%)')
 fn = [outPlot 'wvOEM' int2str(date) dextout '-residuals.pdf'];
 export_fig(fn, '-pdf', '-nocrop')
 
@@ -138,6 +148,7 @@ hfig(8) = figure(13);
 set(gcf,'Units','inches')
 set(gcf,'Position', [1 1 3.25 2.4375]);
 set(gca,'FontSize',9);
+xlabel('Backscatter Ratio')
 ylim([0 7])
 xlim([1 1.15])
 fn = [outPlot 'wvOEM' int2str(date) dextout '-ASR.pdf'];

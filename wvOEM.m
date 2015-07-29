@@ -37,19 +37,23 @@ in.LRtranHeight = 1250; %2500; % m, height the above 2 hand off to each other
 % 1800 0308, 0305 2000 (day)/ 1600 ; 200906 - 2300, 200905 1500
 corrLh = 787.5; % 90 (night) 360 (1/6grid, use 360); %360; %90 %100;
 corrLalpha = 787.5; %90 0906-2000
-varAV = true;
+varAV = true; % true - use variance of average, false - variance of measurements
 varAVA = false; % 0906-false, 0905-true
 uFakvec = 3; % 0 use max, 1 is 0.8 cut, 2 is sum 0.8, 3 is Dof
-% true use variance of average (night) or variance of measurements (day)
+% logOutput turns on diary, savefigs for figure file, savedat for .mat file
+logOutput = true
+savefigs = true
+savedat = true
 
 dataPath = '/Users/BobSica/Dropbox/matlab/matlabWork/fromMCH/ralmodata/';
 outPath = '/Users/BobSica/Dropbox/matlab/matlabWork/fromMCH/ralmoOEMwvOutput/';
-diaryFile = [outPath 'diary' int2str(date) dextsp 'LT-v' VERSION '.markdown'];
-if exist(diaryFile) ~= 0
-    delete(diaryFile);
-end 
-
-diary(diaryFile)
+if logOutput
+    diaryFile = [outPath 'diary' int2str(date) dextsp 'LT-v' VERSION '.markdown'];
+    if exist(diaryFile) ~= 0
+        delete(diaryFile);
+    end
+    diary(diaryFile)
+end
 dext = [nb '30chan2.mat']; % extension for data file
 dextout = [nb '30chan2-v' VERSION '.mat']; % extension for output file with version
 dexts = [nb '00.mat'];
@@ -77,8 +81,6 @@ if reality
     ralmoFile = [dataPath 'ralmo' int2str(date) gext];
     load(ralmoFile);
 end
-savefigs = true
-savedat = true
 logAlpha = false; %false; 0906 true
 logWV = true;
 cf = 3; %tent function on covariance
@@ -490,14 +492,14 @@ subplot(1,2,1)
 plot(Q.y2Hz./1e6*y(1:mchanA),Q.zDATAnA,'b')
 hold on
 plot(Q.y2Hz./1e6*y(1+mchanA:2*mchanA),Q.zDATAnA,'r')
-xlabel('Count Rate (MHz)')
+xlabel('ADC Count Rate (MHz)')
 ylabel('Altitude (km)')
 legend('Analog WV','Analog N2')
 subplot(1,2,2)
 semilogx(Q.y2Hz./1e6*y(1+2*mchanA:2*mchanA+mchanD),Q.zDATAn,'b')
 hold on
 semilogx(Q.y2Hz./1e6*y(1+2*mchanA+mchanD:mdata),Q.zDATAn,'red')
-xlabel('Count Rate (MHz)')
+xlabel('Photocount Rate (MHz)')
 ylabel('Altitude (km)')
 legend('Digital Water Vapour','Digital N2')
 
@@ -901,7 +903,7 @@ handfig(13) = figure;
 plot(Q.asrDATA(20:end),Q.zDATAn(20:end)./1000,'b')
 hold on
 plot(Q.asrDATAA,Q.zDATAnA./1000,'b')
-xlabel('Aerosol Scatering Ratio')
+xlabel('Backscatter Ratio')
 ylabel('Altitude (km)')
 
 if savedat
@@ -915,5 +917,7 @@ end
 if savefigs
     savefig(handfig,[outPath 'wvOEM' int2str(date) fextout])
 end
-diary off
+if logOutput
+    diary off
+end
 

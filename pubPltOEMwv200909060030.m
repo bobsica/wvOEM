@@ -17,6 +17,7 @@ set(gcf,'Position', [1 1 5.75 4.3125]); % [1" 1" xwidth ywidth], y=0.75*x
 subplot(1,2,1)
 xlim([1.4 2.2]); % 0.04 0.075
 set(gca,'FontSize',9);
+xlabel('ADC Count Rate (MHz)')
 legend off
 subplot(1,2,2)
 set(gca,'XScale','log')
@@ -25,6 +26,7 @@ set(gca,'XTick',[.0001 .001 .01 .1 1 10])
 set(gca,'XMinorTick','off')
 %set(gca,'XTick',[1 10 100])
 set(gca,'FontSize',9);
+xlabel('Photocount Rate (MHz)')
 legend off
 fn = [outPlot 'wvOEM' int2str(date) dextout '-rawCounts.pdf'];
 export_fig(fn, '-pdf', '-nocrop')
@@ -35,20 +37,24 @@ set(gcf,'Units','inches')
 set(gcf,'Position', [1 1 5.75 4.3125]);
 subplot(2,2,1)
 title ''
+xlabel('Jacobian (ADC counts/bin/1800 shots)')
 ylim([0 12])
-set(gca,'FontSize',9);
+set(gca,'FontSize',8);
 subplot(2,2,2)
 title ''
+xlabel('Jacobian (ADC counts/bin/1800 shots)')
 ylim([0 12])
-set(gca,'FontSize',9);
+set(gca,'FontSize',8);
 subplot(2,2,3)
 title ''
 ylim([0 12])
-set(gca,'FontSize',9);
+xlabel('Jacobian (photocounts/bin/1800 shots)')
+set(gca,'FontSize',8);
 subplot(2,2,4)
 title ''
 ylim([0 12])
-set(gca,'FontSize',9);
+set(gca,'FontSize',8);
+xlabel('Jacobian (photocounts/bin/1800 shots)')
 fn = [outPlot 'wvOEM' int2str(date) dextout '-jacobians.pdf'];
 export_fig(fn, '-pdf', '-nocrop')
 
@@ -82,17 +88,22 @@ set(gcf,'Position', [1 1 5.75 4.3125]);
 subplot(2,2,1)
 set(gca,'FontSize',9);
 ylim([0 10])
+xlabel('H_2O Analog (%)')
 subplot(2,2,2)
 set(gca,'FontSize',9);
 ylim([0 10])
+xlabel('N_2 Analog (%)')
 subplot(2,2,3)
 set(gca,'FontSize',9);
 %axis([-150 150 2.5 14]);  % 2500 only
 xlim([-100 100])
 ylim([0 10])
+xlabel('H_2O Digital (%)')
 subplot(2,2,4)
 set(gca,'FontSize',9);
-xlim([-20 20])
+xlim([-10 10])
+ylim([0 10])
+xlabel('N_2 Digital (%)')
 fn = [outPlot 'wvOEM' int2str(date) dextout '-residuals.pdf'];
 export_fig(fn, '-pdf', '-nocrop')
 
@@ -133,12 +144,14 @@ hfig(8) = figure(13);
 set(gcf,'Units','inches')
 set(gcf,'Position', [1 1 3.25 2.4375]);
 set(gca,'FontSize',9);
+xlabel('Backscatter Ratio')
 ylim([0 12])
 fn = [outPlot 'wvOEM' int2str(date) dextout '-ASR.pdf'];
 export_fig(fn, '-pdf', '-nocrop')
 
 % Transmission
 hfig(9) = figure(8);
+'fix legend by hand'
 set(gcf,'Units','inches')
 set(gcf,'Position', [1 1 3.25 2.4375]);
 set(gca,'FontSize',9);
