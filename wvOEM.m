@@ -20,7 +20,7 @@ VERSION = '2-0-0'
 %0305 12: 3250, 2500, 20, 50, 1250, 360, 360, var:true/false, 300/50, 1/6, logOD
 %0905 12: 7000, 5000, 50, 80, 1500, 90, 90, var:true/true, 50/50, 1/6, OD
 %090600: 15000, 3000, 50, 80, 2300, 360, 360, var:true/false, 1500/50, 1/6, logOD
-date = 20090905; %20090906; %20150305;20090905 (noon), 0906 (midnight)
+date = 20150305; %20090906; %20150305;20090905 (noon), 0906 (midnight)
 nb = '12';
 dextsp = [nb '30'];
 %14000; % 0308 8000/11000; 0305 2500 (day), 5000; 200906 - 15000 200905 7000
@@ -29,17 +29,17 @@ oemStop = 17500; %0905-7000
 oemStopA = 12000; %0905-5000
 coRET = 3;
 coAddData = 5;
-oemGo = 6*(3.5.*coRET.*coAddData); %300; % 300; 50; %50; 20090906-1500, 20090905-200
+oemGo = 1*(3.5.*coRET.*coAddData); %300; % 300; 50; %50; 20090906-1500, 20090905-200
 oemGoAreal = 1*(3.5.*coRET.*coAddData); %50; % 50; 60; 300; 20090906-50
-in.LRfree = 50; % was 20 on 0305, 0308 50, 200905-6 50
-in.LRpbl = 80; % 50 on 0305; was 80 on otherwise
-in.LRtranHeight = 1500; %2500; % m, height the above 2 hand off to each other
+in.LRfree = 20; % was 20 on 0305, 0308 50, 200905-6 50
+in.LRpbl = 50; % 50 on 0305; was 80 on otherwise
+in.LRtranHeight = 1250; %2500; % m, height the above 2 hand off to each other
 % 1800 0308, 0305 2000 (day)/ 1600 ; 200906 - 2300, 200905 1500
 corrLh = 787.5; % 90 (night) 360 (1/6grid, use 360); %360; %90 %100;
 corrLalpha = 787.5; %90 0906-2000
 varAV = true;
 varAVA = false; % 0906-false, 0905-true
-uFakvec = 2; % 0 use max, 1 is 0.8 cut, 2 is sum 0.8, 3 is Dof
+uFakvec = 3; % 0 use max, 1 is 0.8 cut, 2 is sum 0.8, 3 is Dof
 % true use variance of average (night) or variance of measurements (day)
 
 dataPath = '/Users/BobSica/Dropbox/matlab/matlabWork/fromMCH/ralmodata/';
@@ -736,8 +736,8 @@ else
     pltx(2) = max(x_a(mbL:mbH).*1000.*(mWV./mAir));%.*5;
 end
 plty = get(gca,'YLim');
-pltx = [.001 10];
-axis([.001 10 0 in.zOEM./1000]);
+pltx = [.0001 10];
+axis([.0001 10 0 in.zOEM./1000]);
 semilogx(pltx,[round(Q.zRET(fini)) floor(Q.zRET(fini))]./1000,'k--')
 
 handfig(7) = figure;
@@ -760,6 +760,47 @@ legend('OEM','RALMO')
 ylabel('Altitude (km)')
 
 handfig(8) = figure;
+plot(exp(-xaAlpha(mbL:mbH)),Q.zRET(mbL:mbH)./1000)
+hold on
+plot(exp(-xAlpha(mbL:mbH)),Q.zRET(mbL:mbH)./1000)
+plot(Q.tauRnoA,Q.zDATAnA./1000,'g')
+xlabel('Transmission (355 nm)')
+ylabel('Altitude (km)')
+hleg = legend('a prioiri aerosol','retrieved aerosol','molecular',...
+    'Location','Best');
+set(hleg,'FontSize',8);
+plot(Q.tauRno,Q.zDATAn./1000,'g')
+if logAlpha
+    Tup = exp(-xAlpha(mbL:mbH))+exp(-xAlpha(mbL:mbH)).*sqrt((X.eo(mbL+m:mbH+m)));
+    Tdn = exp(-xAlpha(mbL:mbH))-exp(-xAlpha(mbL:mbH)).*sqrt((X.eo(mbL+m:mbH+m)));
+else
+    Tup = exp(-xAlpha(mbL:mbH)) + sqrt((X.eo(mbL+m:mbH+m)));
+    Tdn = exp(-xAlpha(mbL:mbH)) - sqrt((X.eo(mbL+m:mbH+m)));
+end
+jbfilly(Q.zRET(mbL:mbH)'./1000,Tup',Tdn','r','r',0,.25);
+pltx = get(gca,'XLim');
+plot(pltx,[Q.zRET(fini) Q.zRET(fini)]./1000,'k--')
+
+handfig(9) = figure;
+subplot(1,2,1)
+plot(xaAlpha(mbL:mbH),Q.zRET(mbL:mbH)./1000)
+hold on
+plot(xAlpha(mbL:mbH),Q.zRET(mbL:mbH)./1000)
+xlabel('Optical Depth at 355 nm')
+ylabel('Altitude (km)')
+legend('a priori','Retrieval','Location','NorthWest')
+if logAlpha
+    Tup = xAlpha(mbL:mbH)+exp(-xAlpha(mbL:mbH)).*sqrt((X.eo(mbL+m:mbH+m))); %totErro;
+    Tdn = xAlpha(mbL:mbH)-exp(-xAlpha(mbL:mbH)).*sqrt((X.eo(mbL+m:mbH+m))); %totErro;
+else
+    Tup = xAlpha(mbL:mbH) + sqrt((X.eo(mbL+m:mbH+m)));
+    Tdn = xAlpha(mbL:mbH) - sqrt((X.eo(mbL+m:mbH+m)));
+end
+jbfilly(Q.zRET(mbL:mbH)'./1000,Tup',Tdn','r','r',0,.25);
+pltx = get(gca,'XLim');
+plot(pltx,[Q.zRET(fini) Q.zRET(fini)]./1000,'k--')
+
+subplot(1,2,2)
 xaAlphaD = interp1(Q.zRET(mbL:mbH),xaAlpha(mbL:mbH),Q.zDATAn,'linear');
 xAlphaD = interp1(Q.zRET(mbL:mbH),xAlpha(mbL:mbH),Q.zDATAn,'linear');
 alp = derivative(xAlphaD(3:end-2))./derivative(Q.zDATAn(3:end-2));
@@ -789,47 +830,6 @@ jbfilly(Q.zRET(mbL:mbH)'./1000,1e6.*smooth(Tup,20)',1e6.*smooth(Tdn,20)'...
     ,'r','r',0,.25);
 pltx = get(gca,'XLim');
 plot(pltx,[Q.zRET(fini) Q.zRET(fini)]./1000,'k--')
-
-handfig(9) = figure;
-subplot(1,2,1)
-plot(xaAlpha(mbL:mbH),Q.zRET(mbL:mbH)./1000)
-hold on
-plot(xAlpha(mbL:mbH),Q.zRET(mbL:mbH)./1000)
-xlabel('Optical Depth at 355 nm')
-ylabel('Altitude (km)')
-legend('a priori','Retrieval','Location','NorthWest')
-if logAlpha
-    Tup = xAlpha(mbL:mbH)+exp(-xAlpha(mbL:mbH)).*sqrt((X.eo(mbL+m:mbH+m))); %totErro;
-    Tdn = xAlpha(mbL:mbH)-exp(-xAlpha(mbL:mbH)).*sqrt((X.eo(mbL+m:mbH+m))); %totErro;
-else
-    Tup = xAlpha(mbL:mbH) + sqrt((X.eo(mbL+m:mbH+m)));
-    Tdn = xAlpha(mbL:mbH) - sqrt((X.eo(mbL+m:mbH+m)));
-end
-jbfilly(Q.zRET(mbL:mbH)'./1000,Tup',Tdn','r','r',0,.25);
-pltx = get(gca,'XLim');
-plot(pltx,[Q.zRET(fini) Q.zRET(fini)]./1000,'k--')
-
-subplot(1,2,2)
-plot(exp(-xaAlpha(mbL:mbH)),Q.zRET(mbL:mbH)./1000)
-hold on
-plot(exp(-xAlpha(mbL:mbH)),Q.zRET(mbL:mbH)./1000)
-plot(Q.tauRnoA,Q.zDATAnA./1000,'g')
-xlabel('Transmission (355 nm)')
-ylabel('Altitude (km)')
-hleg = legend('a prioiri aerosol','retrieved aerosol','molecular',...
-    'Location','Best');
-set(hleg,'FontSize',8);
-plot(Q.tauRno,Q.zDATAn./1000,'g')
-pltx = get(gca,'XLim');
-plot(pltx,[Q.zRET(fini) Q.zRET(fini)]./1000,'k--')
-if logAlpha
-    Tup = exp(-xAlpha(mbL:mbH))+exp(-xAlpha(mbL:mbH)).*sqrt((X.eo(mbL+m:mbH+m)));
-    Tdn = exp(-xAlpha(mbL:mbH))-exp(-xAlpha(mbL:mbH)).*sqrt((X.eo(mbL+m:mbH+m)));
-else
-    Tup = exp(-xAlpha(mbL:mbH)) + sqrt((X.eo(mbL+m:mbH+m)));
-    Tdn = exp(-xAlpha(mbL:mbH)) - sqrt((X.eo(mbL+m:mbH+m)));
-end
-jbfilly(Q.zRET(mbL:mbH)'./1000,Tup',Tdn','r','r',0,.25);
 
 handfig(10) = figure;
 hold on
@@ -870,31 +870,34 @@ pltx = get(gca,'XLim');
 plot(pltx,[Q.zRET(fini) Q.zRET(fini)]./1000,'k--')
 %xlim([0 50])
 
-figure
+handfig(12) = figure;
 %subplot(1,2,2)
-plot(X.eo(mbL+m:mbH+m).*100,Q.zRET(mbL:mbH)./1000)
+% optical depth and transmission have the same percentage error
+% below is only correct for alpha retrieval, not log alpha
+plot(X.eo(mbL+m:mbH+m)./abs(xAlpha(mbL:mbH)).*100,Q.zRET(mbL:mbH)./1000)
 hold on
 %plot(X.es(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000)
-plot(sigmaRayErro(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
+plot(sigmaRayErro(mbL:mbH)./abs(xAlpha(mbL:mbH)).*100,Q.zRET(mbL:mbH)./1000,'--')
 % plot(sigmaRerrN(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
 % plot(sigmaHerr(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
 % plot(sigmaNerr(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
-plot(AirErro(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
+plot(AirErro(mbL:mbH)./abs(xAlpha(mbL:mbH)).*100,Q.zRET(mbL:mbH)./1000,'--')
 %plot(AirerrN(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
-plot(SlopeErro(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
+plot(SlopeErro(mbL:mbH)./abs(xAlpha(mbL:mbH)).*100,Q.zRET(mbL:mbH)./1000,'--')
 %plot(OlaperrH(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'-.')
-plot(OlapErro(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'-.')
-plot(totErro.*100,Q.zRET(mbL:mbH)./1000,'k')
+plot(OlapErro(mbL:mbH)./abs(xAlpha(mbL:mbH)).*100,Q.zRET(mbL:mbH)./1000,'-.')
+plot(totErro./abs(xAlpha(mbL:mbH)).*100,Q.zRET(mbL:mbH)./1000,'k')
 hleg = legend('Statistical','\sigma_{Rayleigh}', 'Air Density',...
     'Calibration','Overlap','Total','Location','Best');
 set(hleg,'FontSize',8);
-xlabel('Optical Depth Uncertainty (%)')
+%xlabel('Optical Depth Uncertainty (%)')
+xlabel('Transmission Uncertainty (%)')
 ylabel('Altitude (km)')
 pltx = get(gca,'XLim');
 plot(pltx,[Q.zRET(fini) Q.zRET(fini)]./1000,'k--')
 %xlim([0 2])
 
-handfig(12) = figure;
+handfig(13) = figure;
 plot(Q.asrDATA(20:end),Q.zDATAn(20:end)./1000,'b')
 hold on
 plot(Q.asrDATAA,Q.zDATAnA./1000,'b')

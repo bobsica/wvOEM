@@ -53,6 +53,7 @@ fn = [outPlot 'wvOEM' int2str(date) dextout '-jacobians.pdf'];
 export_fig(fn, '-pdf', '-nocrop')
 
 % Averaging Kernels
+'remove 2 bad kernels by hand'
 hfig(3) = figure(3);
 set(gcf,'Units','inches')
 set(gcf,'Position', [1 1 5.75 4.3125]);
@@ -125,7 +126,7 @@ export_fig(fn, '-pdf', '-nocrop')
 % errors
 hfig(7) = figure(11);
 set(gcf,'Units','inches')
-set(gcf,'Position', [1 1 5.75 4.3125]);
+set(gcf,'Position', [1 1 3.25 2.4375]);
 set(gca,'FontSize',9);
 ylim([0 7])
 xlim([0 25])
@@ -133,21 +134,36 @@ fn = [outPlot 'wvOEM' int2str(date) dextout '-errors.pdf'];
 export_fig(fn, '-pdf', '-nocrop')
 
 % ASR
-hfig(8) = figure(12);
+hfig(8) = figure(13);
 set(gcf,'Units','inches')
 set(gcf,'Position', [1 1 3.25 2.4375]);
 set(gca,'FontSize',9);
 ylim([0 7])
+xlim([1 1.15])
+fn = [outPlot 'wvOEM' int2str(date) dextout '-ASR.pdf'];
+export_fig(fn, '-pdf', '-nocrop')
 
-% Extinction
+% Transmission
 hfig(9) = figure(8);
 set(gcf,'Units','inches')
 set(gcf,'Position', [1 1 3.25 2.4375]);
 set(gca,'FontSize',9);
 ho = findobj(gca,'LineStyle',':');
 set(ho,'LineStyle','none')
-xlim([0 600])
 ylim([0 7])
+xlim([0 2.2])
+fn = [outPlot 'wvOEM' int2str(date) dextout '-trans.pdf'];
+export_fig(fn, '-pdf', '-nocrop')
+
+% trans errors
+hfig(10) = figure(12);
+set(gcf,'Units','inches')
+set(gcf,'Position', [1 1 3.25 2.4375]);
+set(gca,'FontSize',9);
+ylim([0 7])
+%xlim([0 50])
+fn = [outPlot 'wvOEM' int2str(date) dextout '-Terrors.pdf'];
+export_fig(fn, '-pdf', '-nocrop')
 
 savefig(hfig,[outPlot 'wvOEM' int2str(date) fextout2])
   
