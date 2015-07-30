@@ -2,7 +2,7 @@
 
 date = 20090905; %20150305;
 nb = '12'; % '00'
-VERSION = '2-0-0';
+VERSION = '2-0-1';
 outPath = '/Users/BobSica/Dropbox/matlab/matlabWork/fromMCH/ralmoOEMwvOutput/';
 fextout = [nb '30chan2-v' VERSION '.fig'];
 fextout2 = [nb '30chan2-v' VERSION '-pubPlt.fig'];
@@ -59,7 +59,7 @@ fn = [outPlot 'wvOEM' int2str(date) dextout '-jacobians.pdf'];
 export_fig(fn, '-pdf', '-nocrop')
 
 % Averaging Kernels
-'remove 2 bad kernels by hand'
+%'remove 2 bad kernels by hand'
 hfig(3) = figure(3);
 set(gcf,'Units','inches')
 set(gcf,'Position', [1 1 5.75 4.3125]);
@@ -140,6 +140,9 @@ set(gcf,'Position', [1 1 3.25 2.4375]);
 set(gca,'FontSize',9);
 ylim([0 7])
 xlim([0 25])
+hleg = legend('Statistical','\sigma_{Rayleigh}', 'Air Density',...
+    'Calibration','Overlap','Total','Location','Best');
+set(hleg,'FontSize',8,'Box','off');
 fn = [outPlot 'wvOEM' int2str(date) dextout '-errors.pdf'];
 export_fig(fn, '-pdf', '-nocrop')
 

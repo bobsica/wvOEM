@@ -9,42 +9,35 @@
 % variance is allowed to be < background variance. New flag for which background
 % variance to use for analog as well as digital channel.
 
-VERSION = '2-0-0'
 %v2-0-0
-%090600: 17500, 12000, 50, 80, 2300, 787.5, 787.5, var:true/false, 52.5*29/52.5, 3/5, OD
-%0905 12: 17500, 12000, 50, 80, 1500, 787.5, 787.5, var:true/false, 52.5*6/52.5, 3/5, OD
-%0305 12: 17500, 12000, 20, 50, 1250, 787.5, 787.5, var:true/false, 52.5/52.5, 3/5, OD
+%090600: 17500, 12000, 50, 80, 2300, 787.5, 787.5, var:false/false, 52.5*6/52.5, 3/5, OD
+%0905 12: 17500, 12000, 50, 80, 1500, 787.5, 787.5, var:false/false, 52.5*6/52.5, 3/5, OD
+%0305 12: 17500, 12000, 50, 80, 1200, 787.5, 787.5, var:false/false, 52.5/52.5, 3/5, OD
 % cutoff: 0305: 3, 0905: 2, 0906: 2
 
-%v1-2-1
-%0305 12: 3250, 2500, 20, 50, 1250, 360, 360, var:true/false, 300/50, 1/6, logOD
-%0905 12: 7000, 5000, 50, 80, 1500, 90, 90, var:true/true, 50/50, 1/6, OD
-%090600: 15000, 3000, 50, 80, 2300, 360, 360, var:true/false, 1500/50, 1/6, logOD
-date = 20150305; %20090906; %20150305;20090905 (noon), 0906 (midnight)
+VERSION = '2-0-1'
+date = 20150305; %20090906; %20150305
 nb = '12';
-dextsp = [nb '30'];
-%14000; % 0308 8000/11000; 0305 2500 (day), 5000; 200906 - 15000 200905 7000
-oemStop = 17500; %0905-7000
-%5000; % 0308 5000; 0305 1300, 1300 (night); 200906 - 10000, 200905 3500 day
-oemStopA = 12000; %0905-5000
+oemStop = 17500; 
+oemStopA = 12000;
 coRET = 3;
 coAddData = 5;
-oemGo = 1*(3.5.*coRET.*coAddData); %300; % 300; 50; %50; 20090906-1500, 20090905-200
-oemGoAreal = 1*(3.5.*coRET.*coAddData); %50; % 50; 60; 300; 20090906-50
-in.LRfree = 20; % was 20 on 0305, 0308 50, 200905-6 50
-in.LRpbl = 50; % 50 on 0305; was 80 on otherwise
-in.LRtranHeight = 1250; %2500; % m, height the above 2 hand off to each other
-% 1800 0308, 0305 2000 (day)/ 1600 ; 200906 - 2300, 200905 1500
+oemGo = 1*(3.5.*coRET.*coAddData);
+oemGoAreal = 1*(3.5.*coRET.*coAddData); %20090906-6* for no spike
+in.LRfree = 50; % was 20 on 0305, 0308 50, 200905-6 50
+in.LRpbl = 80; % 50 on 0305; was 80 on otherwise
+in.LRtranHeight = 1200;
 corrLh = 787.5; % 90 (night) 360 (1/6grid, use 360); %360; %90 %100;
 corrLalpha = 787.5; %90 0906-2000
-varAV = true; % true - use variance of average, false - variance of measurements
-varAVA = false; % 0906-false, 0905-true
+varAV = false; % true - use variance of average, false - variance of measurements
+varAVA = false; 
 uFakvec = 3; % 0 use max, 1 is 0.8 cut, 2 is sum 0.8, 3 is Dof
 % logOutput turns on diary, savefigs for figure file, savedat for .mat file
 logOutput = true
 savefigs = true
 savedat = true
 
+dextsp = [nb '30'];
 dataPath = '/Users/BobSica/Dropbox/matlab/matlabWork/fromMCH/ralmodata/';
 outPath = '/Users/BobSica/Dropbox/matlab/matlabWork/fromMCH/ralmoOEMwvOutput/';
 if logOutput
@@ -69,7 +62,7 @@ dfacDeadN = dfacDeadH; %0.01;
 deadTimeN = 4;
 normStop = 25000;
 aposteriori = false; % if true use a posteriori analog variance
-oStretch = 1; % stretch or shrink overlap
+oStretch = 1.2; % 1.2; % stretch or shrink overlap
 % varMask = 0; % variance increase
 % maskLow = 100000; %500; % height of low mask
 % maskHigh = 0; % height of high mask
@@ -81,7 +74,7 @@ if reality
     ralmoFile = [dataPath 'ralmo' int2str(date) gext];
     load(ralmoFile);
 end
-logAlpha = false; %false; 0906 true
+logAlpha = false; 
 logWV = true;
 cf = 3; %tent function on covariance
 mAir = 28.966;
@@ -89,6 +82,7 @@ mWV = 18.02;
 oemPath = './'; % for saving plots
 
 % inputs for ralmo data
+in.go = 3; % plus/minus in.go points in pieceWise
 in.pieceWise = pieceWise;
 in.date = date;
 in.slope = 34; %30.14; %35; % 2015 37.88; 34 is adhoc, (30+38)/2
@@ -186,15 +180,31 @@ dfacSigRamN = 0.1;
 %dfacCoefs = 0.1; % 05;
 %dfacTheta = 0.1; %0.1;
 dfacSlope = 0.05;
-dfacAlpha = 0.1; %0.5;
+dfacAlpha = 0.25; %0.5;
 dfacOD = 0.5; % 0.25, 0.20;
 dfacAng = 0.01; % 0.05
 dfacCNp = 0.1; % was 0.25;
 dfacCHp = 0.5; 
 
-dfacOlap0 = 0.1; %0.25; %0.01;
-varOlapA = (dfacOlap0.*exp(-Q.zDATAnA./1000) .* Q.olapA).^2;
-varOlapD = (dfacOlap0*exp(-Q.zDATAn./1000) .* Q.olap).^2;
+dfacOlap0 = 0.1; %0.1; %0.25; %0.01;
+zogo = 2500;
+if Q.zDATAnA(end) > zogo && Q.zDATAn(1) < zogo
+    fzogoA = find(Q.zDATAnA < zogo);
+    zzogoA = Q.zDATAnA(fzogoA(end)+1);
+    fzogoD = find(Q.zDATAn < zogo);
+    zzogoD = Q.zDATAn(fzogoD(end)+1);
+    %varOlapA = (dfacOlap0.*exp(-(Q.zDATAnA-zzogoA)./500) .* Q.olapA).^2;
+    varOlapA = zeros(size(Q.zDATAnA));
+    varOlapA(1:fzogoA(end)) = (dfacOlap0 .* Q.olapA(1:fzogoA(end))).^2;
+    varOlapA(fzogoA(end)+1:end) = 1e-4 .* Q.olapA(fzogoA(end)+1:end);
+    %varOlapD = (dfacOlap0*exp(-(Q.zDATAn-zzogoD)./500) .* Q.olap).^2;
+    varOlapD = zeros(size(Q.zDATAn));
+    varOlapD(1:fzogoD(end)) = (dfacOlap0 .* Q.olap(1:fzogoD(end))).^2;
+    varOlapD(fzogoD(end)+1:end) = 1e-4 .* Q.olap(fzogoD(end)+1:end);
+else
+    varOlapA = (dfacOlap0 .* Q.olapA).^2;
+    varOlapD = (dfacOlap0 .* Q.olap).^2;
+end
 Solap = diag([varOlapA; varOlapA; varOlapD; varOlapD]);
 
 dfacAir = 0.01;
@@ -245,31 +255,15 @@ dzRET = Q.zRET(2) - Q.zRET(1);
 lc = (round(corrLh ./ dzRET) .* dzRET) .* ones(size(Q.zRET));
 lcalpha = (round(corrLalpha ./ dzRET) .* dzRET) .* ones(size(Q.zRET));
 
-% Airvartmp = (dfacAir .* Q.nNret).^2; % only perturbing N2, not air
-% Airvar = [Airvartmp; Airvartmp]; % for 2*m retrieval parameters
-
-%Sair = zeros(n,n);
-%Solap = zeros(n,n);
-
 SsigmaN = (dfacSigmaN.*Q.sigmaN).^2;
 SsigmaH = (dfacSigmaH.*Q.sigmaH).^2;
 SsigmaR = (dfacSigmaR.*Q.sigmaR).^2;
-%SsigRamH = (dfacSigRamH.*Q.sigRamH).^2; SsigRamN =
-%(dfacSigRamN.*Q.sigRamN).^2;
 Sslope = (dfacSlope.*Q.slope).^2;
-%S_DT = varDT;
-
-% mvarL = find(Q.zDATAn < in.maskLow);
-% mvarH = find(Q.zDATAn > in.maskHigh);
-% mvarLR = find(Q.zRET < in.maskLow);
-% mvarHR = find(Q.zRET > in.maskHigh);
 
 S_a = zeros(n,n);
 for i=1:m
     for j=1:m
         sigprod = sqrt(vars2(i) .* vars2(j));
-%        sigAirvar = sqrt(Airvar(i) .* Airvar(j));
-%        sigOlapvar = sqrt(varOlap(i) .* varOlap(j));
         diffz = Q.zRET(i) - Q.zRET(j);
         sumlc = lc(i) + lc(j);
         shape(1) = exp(-(2.*diffz./sumlc).^2); %Gaussian correlation function
@@ -279,16 +273,12 @@ for i=1:m
             shape(3) = 0;
         end
         S_a(i,j) = sigprod .* shape(cf); %Gaussian correlation function
-%        Sair(i,j) = sigAirvar .* shape(cf);
-%        Solap(i,j) = sigOlapvar .* shape(cf);
     end
 end
-% using different correlation length for alpha
+% option for using different correlation length for alpha
 for i=m+1:2*m
     for j=m+1:2*m
         sigprod = sqrt(vars2(i) .* vars2(j));
- %       sigAirvar = sqrt(Airvar(i) .* Airvar(j));
- %       sigOlapvar = sqrt(varOlap(i) .* varOlap(j));
         diffz = Q.zRET(i-m) - Q.zRET(j-m);
         sumlc = lcalpha(i-m) + lcalpha(j-m);
         shape(1) = exp(-(2.*diffz./sumlc).^2); %Gaussian correlation function
@@ -298,8 +288,6 @@ for i=m+1:2*m
             shape(3) = 0;
         end
         S_a(i,j) = sigprod .* shape(cf); %.* shape(cf); %Gaussian correlation function
-%       Sair(i,j) = sigAirvar .* shape(cf);
-%        Solap(i,j) = sigOlapvar .* shape(cf);
     end
 end
 
@@ -324,7 +312,16 @@ if logWV
 else
     X.vmr = X.x(1:m);
 end
-%X.alpha = exp(X.x(m+1:2*m));
+if logAlpha
+    xaAlpha = exp(x_a(m+1:2*m)); % + Q.odnormR);
+    xAlpha = exp(X.x(m+1:2*m)); % + Q.odnormR);
+    X.xAlpha = xAlpha; % only used for save file
+else
+    xaAlpha = x_a(m+1:2*m); % done in makeQ + Q.odnormR (from ground to start);
+    xAlpha = X.x(m+1:2*m); % + Q.odnormR;
+    X.xAlpha = xAlpha; % only used for save file
+end
+
 'X.cost'
 X.cost
 
@@ -333,14 +330,6 @@ degF2 = trace(X.A(m+1:2*m,m+1:2*m));
 
 finiDoF = round(min(degF1,degF2));
 
-if logAlpha
-    xaAlpha = exp(x_a(m+1:2*m)); % + Q.odnormR);
-    xAlpha = exp(X.x(m+1:2*m)); % + Q.odnormR);
-else
-    xaAlpha = x_a(m+1:2*m); % done in makeQ + Q.odnormR (from ground to start);
-    xAlpha = X.x(m+1:2*m); % + Q.odnormR;
-end
-
 % remove retrieval points outside of data grid
 mbLo = find(Q.zRET < min(Q.zDATAnA(1),Q.zDATAn(1)));
 mbHi = find(Q.zRET > max(Q.zDATAnA(end),Q.zDATAn(end)));
@@ -348,71 +337,46 @@ mbH = mbHi(1) - 1;
 mbL = mbLo(end) + 1;
 mbH2 = m - mbH;
 
-% calculate errors for q
-digWVgo = 2*mchanA + 1;
-digN2go = 2*mchanA + mchanD +1;
-anN2go = mchanA + 1;
-%Sxsigma = X.G*R.KsigmaRay*SsigmaN*R.KsigmaRay'*X.G';
+% calculate error matrices
 Sxsigma = X.G*R.KsigmaRay*SsigmaN*R.KsigmaRay'*X.G';
-% SxsigmaH = X.G(1:m,1:mchanA)*R.KsigmaHA*SsigmaH*R.KsigmaHA'*X.G(1:m,1:mchanA)' + ...
-%     X.G(1:m,digWVgo:digN2go-1)*R.KsigmaH*SsigmaH*R.KsigmaH'...
-%     *X.G(1:m,digWVgo:digN2go-1)';
-% SxsigmaSHR = X.G(1:m,1:mchanA)*R.KsigmaSHRA*SsigmaR*R.KsigmaSHRA'*X.G(1:m,1:mchanA)' ...
-%     + X.G(1:m,digWVgo:digN2go-1)*R.KsigmaSHR*SsigmaR*R.KsigmaSHR'*...
-%     X.G(1:m,digWVgo:digN2go-1)';
-% SxsigmaSNR = X.G(1:m,anN2go:2*mchanA)*R.KsigmaSNRA*SsigmaR*R.KsigmaSNRA'*...
-%     X.G(1:m,anN2go:2*mchanA)' + X.G(1:m,digN2go:mdata)*R.KsigmaSNR*SsigmaR...
-%     *R.KsigmaSNR'*X.G(1:m,digN2go:mdata)';
-% SxAirH = X.G(1:m,1:mchanA)*R.KairA(1:mchanA,1:m)*Sair(1:m,1:m)*R.KairA(1:mchanA,1:m)'...
-%     *X.G(1:m,1:mchanA)' + X.G(1:m,digWVgo:digN2go-1)...
-%     *R.Kair(digWVgo:digN2go-1,1:m)*Sair(1:m,1:m)*R.Kair(digWVgo:digN2go-1,1:m)'...
-%     *X.G(1:m,digWVgo:digN2go-1)';
-% SxAirN = X.G(1:m,mchanA+1:2*mchanA)*R.KairA(mchanA+1:2*mchanA,1:m)...
-%     *Sair(1:m,1:m)*R.KairA(mchanA+1:2*mchanA,1:m)'*X.G(1:m,mchanA+1:2*mchanA)'...
-%     + X.G(1:m,digN2go:mdata)*R.Kair(digN2go:mdata,1:m)...
-%     *Sair(1:m,1:m)*R.Kair(digN2go:mdata,1:m)'*X.G(:,digN2go:mdata)';
 SxAir = X.G*R.Kair*Sair*R.Kair'*X.G';
-
-%SxSlopeA = X.G(:,1:mchanA)*R.KslopeA*Sslope*R.KslopeA'*X.G(:,1:mchanA)'...
-%    + X.G(:,anN2go:digWVgo-1)*R.KslopeA*Sslope*R.KslopeA'*X.G(:,anN2go:digWVgo-1)';
-%SxSlope = X.G(1:m,digN2go:mdata)*R.Kslope*Sslope*R.Kslope'*X.G(1:m,digN2go:mdata)'...
-%    + X.G(1:m,digWVgo:digN2go-1)*R.Kslope*Sslope*R.Kslope'*X.G(1:m,digWVgo:digN2go-1)';
-% SxSlope = X.G(:,1:mchanA)*R.Kslope(1:mchanA)*Sslope*R.Kslope(1:mchanA)'...
-%     *X.G(:,1:mchanA)'...
-%     + X.G(:,digWVgo:digN2go-1)*R.Kslope(mchanA+1:mchanA+mchanD)*Sslope...
-%     *R.Kslope(mchanA+1:mchanA+mchanD)'*X.G(:,digWVgo:digN2go-1)';
 SxSlope = X.G*R.Kslope*Sslope*R.Kslope'*X.G';
-%SxSlope = SxSlopeA.*(in.slopeA./in.slope).^2 + SxSlopeD;
-% SxOlapH = X.G(:,1:mchanA)*R.KolapA(1:mchanA,:)...
-%     *Solap*R.KolapA(1:mchanA,:)'*X.G(:,1:mchanA)'...
-%     + X.G(:,digWVgo:digN2go-1)*R.Kolap(digWVgo:digN2go-1,:)...
-%     *Solap*R.Kolap(digWVgo:digN2go-1,:)'*X.G(:,digWVgo:digN2go-1)';
-% SxOlapN = X.G(:,mchanA+1:2*mchanA)*R.KolapA(mchanA+1:2*mchanA,:)...
-%     *Solap*R.KolapA(mchanA+1:2*mchanA,:)'*X.G(:,mchanA+1:2*mchanA)'...
-%     + X.G(:,digN2go:mdata)*R.Kolap(digN2go:mdata,:)...
-%     *Solap*R.Kolap(digN2go:mdata,:)'*X.G(:,digN2go:mdata)';
-% SxOlapN = X.G(:,digN2go:mdata)*R.Kolap(digN2go:mdata,:)...
-%     *Solap*R.Kolap(digN2go:mdata,:)'*X.G(:,digN2go:mdata)';
 SxOlap = X.G*R.Kolap*Solap*R.Kolap'*X.G';
 
-sigmaRayErrq = sqrt(diag(Sxsigma(1:m,1:m)));
-AirErrq = sqrt(diag(SxAir(1:m,1:m)));
-SlopeErrq = sqrt(diag(SxSlope(1:m,1:m)));
-OlapErrq = sqrt(diag(SxOlap(1:m,1:m)));
+% for q
+if logWV
+    sigmaRayErrq = sqrt(diag(Sxsigma(1:m,1:m)));
+    AirErrq = sqrt(diag(SxAir(1:m,1:m)));
+    SlopeErrq = sqrt(diag(SxSlope(1:m,1:m)));
+    OlapErrq = sqrt(diag(SxOlap(1:m,1:m)));
+    obsErrq = X.eo(1:m);
+else
+    sigmaRayErrq = sqrt(diag(Sxsigma(1:m,1:m))) ./ X.vmr;
+    AirErrq = sqrt(diag(SxAir(1:m,1:m))) ./ X.vmr;
+    SlopeErrq = sqrt(diag(SxSlope(1:m,1:m))) ./ X.vmr;
+    OlapErrq = sqrt(diag(SxOlap(1:m,1:m))) ./ X.vmr;
+    obsErrq = X.eo(1:m) ./ X.vmr;
+end
+totErrq = sqrt(obsErrq(mbL:mbH).^2 + sigmaRayErrq(mbL:mbH).^2....
++ AirErrq(mbL:mbH).^2 + SlopeErrq(mbL:mbH).^2 + OlapErrq(mbL:mbH).^2);
 
-sigmaRayErro = sqrt(diag(Sxsigma(m+1:2*m,m+1:2*m)));
-AirErro = sqrt(diag(SxAir(m+1:2*m,m+1:2*m)));
-SlopeErro = sqrt(diag(SxSlope(m+1:2*m,m+1:2*m)));
-OlapErro = sqrt(diag(SxOlap(m+1:2*m,m+1:2*m)));
-
-% smoothing error removed: +(X.es(mbL:mbH)).^2, +(OlaperrH(mbL:mbH)).^2,
-% +(AirerrN(mbL:mbH)).^2+(sigmaRerrH(mbL:mbH)).^2+(sigmaRerrN(mbL:mbH)).^2
-% +(sigmaHerrq(mbL:mbH)).^2
-totErrq = sqrt((X.eo(mbL:mbH)).^2+(sigmaRayErrq(mbL:mbH)).^2....
-    +(AirErrq(mbL:mbH)).^2+(SlopeErrq(mbL:mbH)).^2+(OlapErrq(mbL:mbH)).^2);
-% presumes log retrieval for OD
-totErro = sqrt((X.eo(mbL+m:mbH+m)).^2+(sigmaRayErro(mbL:mbH)).^2....
-    +(AirErro(mbL:mbH)).^2+(SlopeErro(mbL:mbH)).^2+(OlapErro(mbL:mbH)).^2);
+% for OD
+if logAlpha
+    sigmaRayErro = sqrt(diag(Sxsigma(m+1:2*m,m+1:2*m)));
+    AirErro = sqrt(diag(SxAir(m+1:2*m,m+1:2*m)));
+    SlopeErro = sqrt(diag(SxSlope(m+1:2*m,m+1:2*m)));
+    OlapErro = sqrt(diag(SxOlap(m+1:2*m,m+1:2*m)));
+    obsErro = X.eo(m+1:2*m);
+else
+    axAlpha = abs(xAlpha); % alpha can be negative
+    sigmaRayErro = sqrt(diag(Sxsigma(m+1:2*m,m+1:2*m))) ./ axAlpha;
+    AirErro = sqrt(diag(SxAir(m+1:2*m,m+1:2*m))) ./ axAlpha;
+    SlopeErro = sqrt(diag(SxSlope(m+1:2*m,m+1:2*m))) ./ axAlpha;
+    OlapErro = sqrt(diag(SxOlap(m+1:2*m,m+1:2*m))) ./ axAlpha;
+    obsErro = X.eo(m+1:2*m) ./ axAlpha;
+end
+totErro = sqrt(obsErro(mbL:mbH).^2 + sigmaRayErro(mbL:mbH).^2....
++ AirErro(mbL:mbH).^2 + SlopeErro(mbL:mbH).^2 + OlapErro(mbL:mbH).^2);
 
 % output to screen
 disp(' ')
@@ -540,7 +504,7 @@ if isempty(fak2)
 end
 fakvec = [fak(end); fak2(end); finiDoF]'
 if uFakvec == 0
-    fini = max(fakvec(3));
+    fini = finiDoF;
 else
     fini = fakvec(uFakvec);
 end
@@ -659,14 +623,6 @@ ylim([0 1.05.*oemStop./1000])
 % plot retrievals of n and q
 handfig(6) = figure;
 if reality
-%    lambda = 0.3547; lambdaH = 0.40749; lambdaN = 0.38669; tH = xAlpha .*
-%    (lambda./lambdaH).^(-X.x(end-2)); tN = xAlpha .*
-%    (lambda./lambdaN).^(-X.x(end-2)); TrH =
-%    interp1(Q.zRET,exp(-tH),Q.zDATAn,'linear'); TrN =
-%    interp1(Q.zRET,exp(-tN),Q.zDATAn,'linear'); wvTret = in.slope .*
-%    (TrH./TrN) .* (Q.tauHno./Q.tauNno) .* ((Q.SHcoadd -
-%    Q.backH)./(Q.SNcoadd - Q.backN));
-%    semilogx(out.q,(out.z-490)./1000,'bx') % RALMO standard plot
     nRalmo = length(ralmo.t) ./ ralmo.records;
     itst = 1:1:length(ralmo.t);
     mR = mod(itst,nRalmo);
@@ -688,28 +644,8 @@ else
 end
 fd1 = find(Q.zRET > oemGoA);
 fdh = find(Q.zRET > oemStopA);
-% % % comment lines are for plots with step changes
-% % % this one swapped in.slopeA & in.slope
-% % semilogx(X.vmr(mbL:fd1(1)-1).*1000.*(mAir./mWV).*(in.slope./in.slopeA)...
-% %     ,Q.zRET(mbL:fd1(1)-1)./1000,'r','LineWidth',2)
-% % % was this at night? (scaling reversed)
-% % % semilogx(X.vmr(fd1(1):fdh(1)-1).*1000.*(mAir./mWV).*(in.slopeA./in.slope)...
-% % %     ,Q.zRET(fd1(1):fdh(1)-1)./1000,'r','LineWidth',2)
-% % semilogx(X.vmr(fd1(1):fdh(1)-1).*1000.*(mAir./mWV).*(in.slope./in.slopeA)...
-% %     ,Q.zRET(fd1(1):fdh(1)-1)./1000,'r','LineWidth',2)
-% % semilogx(X.vmr(fdh(1)+2:mbH).*1000.*(mAir./mWV).*(in.slope./in.slopeA)...
-% %     ,Q.zRET(fdh(1)+2:mbH)./1000,'r','LineWidth',2)
-% % %semilogx(X.vmr(mbL:mbH).*1000.*(mAir./mWV).*(in.slope./in.slopeA)...
-% % %    ,Q.zRET(mbL:mbH)./1000,'r','LineWidth',2)
 semilogx(X.vmr(mbL:mbH).*1000.*(mWV./mAir).*(outSlopeA./in.slope),...
     Q.zRET(mbL:mbH)./1000,'r','LineWidth',2)
-if logWV
-%    semilogx(exp(x_a(mbL:mbH)).*1000.*(mWV./mAir),Q.zRET(mbL:mbH)./1000);
-%    % was ./(mAir ./ mWV)
-else
-%    semilogx(x_a(mbL:mbH).*1000.*(mWV./mAir),Q.zRET(mbL:mbH)./1000); % was
-%    ./(mAir ./ mWV)
-end
 semilogx(Q.wvTradNoA,Q.zDATAnA./1000,'yo:');
 semilogx(Q.wvTradNo,Q.zDATAn./1000,'cx:');
 semilogx(Q.mmrSnd,Q.zsnd./1000,'g');
@@ -720,16 +656,7 @@ ylabel('Altitude (km)')
 xlabel('WV Mixing Ratio (g/kg)')
 warning on
 
-% if reality
-%     legend('RALMO','Retrieval','Ratio Analog','Ratio Digital','Radiosonde',...
-%         'a priori','Location','Best')
-% else
-%     legend('True','Retrieval','a priori','Location','Best')
-% end
 ylim([Q.zRET(1) Q.zRET(end)]./1000)
-%pltx = get(gca,'XLim'); plty = get(gca,'YLim'); axis([0 pltx(2) 2
-%plty(2)]) pltx = get(gca,'XLim'); plot(pltx,[Q.zRET(fini)
-%Q.zRET(fini)]./1000,'k--')
 if logWV
     pltx(1) = min(exp(x_a(mbL:mbH)).*1000.*(mWV./mAir));%./5;
     pltx(2) = max(exp(x_a(mbL:mbH)).*1000.*(mWV./mAir));%.*5;
@@ -769,8 +696,8 @@ plot(Q.tauRnoA,Q.zDATAnA./1000,'g')
 xlabel('Transmission (355 nm)')
 ylabel('Altitude (km)')
 hleg = legend('a prioiri aerosol','retrieved aerosol','molecular',...
-    'Location','Best');
-set(hleg,'FontSize',8);
+    'Location','East');
+set(hleg,'FontSize',7,'Box','off');
 plot(Q.tauRno,Q.zDATAn./1000,'g')
 if logAlpha
     Tup = exp(-xAlpha(mbL:mbH))+exp(-xAlpha(mbL:mbH)).*sqrt((X.eo(mbL+m:mbH+m)));
@@ -780,6 +707,7 @@ else
     Tdn = exp(-xAlpha(mbL:mbH)) - sqrt((X.eo(mbL+m:mbH+m)));
 end
 jbfilly(Q.zRET(mbL:mbH)'./1000,Tup',Tdn','r','r',0,.25);
+xlim([0 2.25])
 pltx = get(gca,'XLim');
 plot(pltx,[Q.zRET(fini) Q.zRET(fini)]./1000,'k--')
 
@@ -792,8 +720,8 @@ xlabel('Optical Depth at 355 nm')
 ylabel('Altitude (km)')
 legend('a priori','Retrieval','Location','NorthWest')
 if logAlpha
-    Tup = xAlpha(mbL:mbH)+exp(-xAlpha(mbL:mbH)).*sqrt((X.eo(mbL+m:mbH+m))); %totErro;
-    Tdn = xAlpha(mbL:mbH)-exp(-xAlpha(mbL:mbH)).*sqrt((X.eo(mbL+m:mbH+m))); %totErro;
+    Tup = xAlpha(mbL:mbH)+exp(-xAlpha(mbL:mbH)).*sqrt((X.eo(mbL+m:mbH+m)));
+    Tdn = xAlpha(mbL:mbH)-exp(-xAlpha(mbL:mbH)).*sqrt((X.eo(mbL+m:mbH+m)));
 else
     Tup = xAlpha(mbL:mbH) + sqrt((X.eo(mbL+m:mbH+m)));
     Tdn = xAlpha(mbL:mbH) - sqrt((X.eo(mbL+m:mbH+m)));
@@ -818,13 +746,9 @@ ylabel 'Altitude(km)'
 legend('Molecular','Aerosol')
 plot([0 0],[0 round(Q.zDATAn(end)./1000)],'k:')
 if logAlpha
-    'bad option in extinction plot'
-    sttoopppp
     Tup = exp(-xAlpha(mbL:mbH))+exp(-xAlpha(mbL:mbH)).*sqrt((X.eo(mbL+m:mbH+m)));
     Tdn = exp(-xAlpha(mbL:mbH))-exp(-xAlpha(mbL:mbH)).*sqrt((X.eo(mbL+m:mbH+m)));
 else
-%    Tup = alpRET + sqrt(2.*(X.eo(mbL+m:mbH+m))./derivative(Q.zRET(mbL:mbH))); 
-    % 2 times is from derivative
     Tup = alpRET + sqrt(2.*abs(X.eo(mbL+m:mbH+m)./xAlpha(mbL:mbH))).*alpRET;
     Tdn = alpRET - sqrt(2.*abs(X.eo(mbL+m:mbH+m)./xAlpha(mbL:mbH))).*alpRET;
 end
@@ -849,18 +773,11 @@ legend('Optical Depth Smoothing','Optical Depth Total')
 % plot errors
 handfig(11) = figure;
 % note since X.x is the log(vmr), sigma_X.x = sigma_vmr / vmr
-%subplot(1,2,1)
-plot(X.eo(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000)
+plot(obsErrq(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000)
 hold on
-%plot(X.es(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000)
 plot(sigmaRayErrq(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
-% plot(sigmaRerrN(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
-% plot(sigmaHerr(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
-% plot(sigmaNerr(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
 plot(AirErrq(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
-%plot(AirerrN(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
 plot(SlopeErrq(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
-%plot(OlaperrH(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'-.')
 plot(OlapErrq(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'-.')
 plot(totErrq.*100,Q.zRET(mbL:mbH)./1000,'k')
 hleg = legend('Statistical','\sigma_{Rayleigh}', 'Air Density',...
@@ -876,19 +793,13 @@ handfig(12) = figure;
 %subplot(1,2,2)
 % optical depth and transmission have the same percentage error
 % below is only correct for alpha retrieval, not log alpha
-plot(X.eo(mbL+m:mbH+m)./abs(xAlpha(mbL:mbH)).*100,Q.zRET(mbL:mbH)./1000)
+plot(obsErro(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000)
 hold on
-%plot(X.es(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000)
-plot(sigmaRayErro(mbL:mbH)./abs(xAlpha(mbL:mbH)).*100,Q.zRET(mbL:mbH)./1000,'--')
-% plot(sigmaRerrN(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
-% plot(sigmaHerr(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
-% plot(sigmaNerr(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
-plot(AirErro(mbL:mbH)./abs(xAlpha(mbL:mbH)).*100,Q.zRET(mbL:mbH)./1000,'--')
-%plot(AirerrN(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
-plot(SlopeErro(mbL:mbH)./abs(xAlpha(mbL:mbH)).*100,Q.zRET(mbL:mbH)./1000,'--')
-%plot(OlaperrH(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'-.')
-plot(OlapErro(mbL:mbH)./abs(xAlpha(mbL:mbH)).*100,Q.zRET(mbL:mbH)./1000,'-.')
-plot(totErro./abs(xAlpha(mbL:mbH)).*100,Q.zRET(mbL:mbH)./1000,'k')
+plot(sigmaRayErro(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
+plot(AirErro(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
+plot(SlopeErro(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'--')
+plot(OlapErro(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'-.')
+plot(totErro.*100,Q.zRET(mbL:mbH)./1000,'k')
 hleg = legend('Statistical','\sigma_{Rayleigh}', 'Air Density',...
     'Calibration','Overlap','Total','Location','Best');
 set(hleg,'FontSize',8);

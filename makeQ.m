@@ -177,18 +177,10 @@ end
 dzDATA = zN(2) - zN(1);
 y2Hz = clight ./ (2.*(deltaTime.*Rate).*dzDATA);
 
-sndChk = datevec(timeEnd);
-%if sndChk(4) < 10
-    sndDate = in.date;
-%else
-%    sndDate = in.date + 1;
-%end
+sndDate = in.date;
 sndFile = [dataPath 'snd' int2str(sndDate) in.dexts];
 %sndFile = [dataPath 'RS92v' int2str(in.date+1) '000000.mat'];
 load(sndFile);
-%load('./ralmodata/fromAH20120717/snd.mat')
-% if RS92v uncomment next 2 lines
-%snd.ptu = RS92; snd.ptu.gph = snd.ptu.z;
 
 %snd.ptu = out.snd;
 itop = length(snd.ptu.gph);
@@ -292,13 +284,6 @@ fhi = find(zN > asr.z(end));
 if ~isempty(fhi)
   asrDATA(fhi) = 1;
 end
-% fchk = find(isnan(asrDATA));
-% fchk2 = find(isnan(beta_mol_DATA));
-% fchk3 = find(isnan(alpha_mol_DATA));
-% if ~isempty(fchk | fchk2 | fchk3)
-%    'asrDATA or alpha/beta from model has NaNs in makeQ9, stop'
-%    stop
-% end
 flowA = find(zNA < asr.z(1));
 if ~isempty(flowA)
  asrDATAA(flowA) = asrDATAA(flowA(end)+1);
@@ -339,14 +324,6 @@ alphaAer(znoAer) = 1e-12;
 alphaAerA = LRA .* (beta_mol_DATAA .* (asrDATAsA-1));
 fl0A = find(alphaAerA <= 0);
 alphaAerA(fl0A) = 1e-12;
-
-% 'fixed extinction = molecular'
-% alphaAer = 61e-6.*ones(size(zN));
-% alphaAerA = 61e-6.*ones(size(zNA));
-
-%'setting extinction = 0' alphaAer = zeros(size(zN)); 'ad hoc extinction'
-%alphaAer = 1e-5.*ones(size(zN)); alphaAer = alphaAer./10; alphaCorErr =
-%((sdasrCor./asrCor).*alpha_mol_DATA); % estimate of background SD
 alphaCorErr = 0;
 z0 = 0:.1:zN(1);
 alpha0 = alphaAer(1) .* ones(size(z0));
@@ -448,7 +425,7 @@ y = [Q.SHcoaddA; Q.SNcoaddA; Q.SHcoadd; Q.SNcoadd];
 if in.pieceWise
     lzD = length(zN);
     lzA = length(zNA);
-    go = 6; %12; %24
+    go = in.go; % 6; 12; %24
     stop = go-1;
     j = 0;
     for i = go:lzA-stop
@@ -473,67 +450,26 @@ if in.pieceWise
     
     WVvarA = zeros(size(SHcoaddA));
     N2varA = zeros(size(SNcoaddA));
-    WVvarA(go:lzA) = varWVA;
-    WVvarA(1:go-1) = WVvarA(go);
-    WVvarA(lzA+1:end) = WVvarA(lzA);
-    N2varA(go:lzA) = varN2A;
-    N2varA(1:go-1) = N2varA(go);
-    N2varA(lzA+1:end) = N2varA(lzA);
+    WVvarA(go:lzA-stop) = varWVA(go:lzA-stop);
+    WVvarA(1:go-1) = varWVA(go);
+    WVvarA(lzA-stop+1:end) = WVvarA(lzA-stop);
+    N2varA(go:lzA-stop) = varN2A(go:lzA-stop);
+    N2varA(1:go-1) = varN2A(go);
+    N2varA(lzA-stop+1:end) = N2varA(lzA-stop);
+%     fix variance in cloud for 5 Mar 2015
+%     fc = find(zNA > 1080);
+%     N2varA(fc(1):end) = N2varA(fc(1)-1);
     WVvar = zeros(size(SHcoadd));
     N2var = zeros(size(SNcoadd));
-    WVvar(go:lzD) = varWV;
-    WVvar(1:go-1) = WVvar(go);
-    WVvar(lzD+1:end) = WVvar(lzD);
-    N2var(go:lzD) = varN2;
-    N2var(1:go-1) = N2var(go);
-    N2var(lzD+1:end) = N2var(lzD);
-
-%     fSH = find(WVvar < backVarH);
-%     fSN = find(N2var < backVarN);
-%     fSHA = find(WVvarA < backVarHA);
-%     fSNA = find(N2varA < backVarNA);
-%' let variance be < background'
-   
+    WVvar(go:lzD-stop) = varWV(go:lzD-stop);
+    WVvar(1:go-1) = varWV(go);
+    WVvar(lzD-stop+1:end) = WVvar(lzD-stop);
+    N2var(go:lzD-stop) = varN2(go:lzD-stop);
+    N2var(1:go-1) = varN2(go);
+    N2var(lzD-stop+1:end) = N2var(lzD-stop);  
 else
-% ad hoc DT error estimate
-
-'dead code!'
-stoooopp
-
-%     yTrueN1 = (yObsN./(1-yObsN*4.04e-9)) ./ y2Hz;
-%     yTrueH1 = (yObsH./(1-yObsH*4.04e-9)) ./ y2Hz;
-% 
-%     trueErrN = (abs(yTrueN1-yTrueN)).^2;
-%     trueErrH = (abs(yTrueH1-yTrueH)).^2;
-% 
-%     warning off
-%     figure
-%     semilogx(Q.yTrueN-backN,Q.zDATAn)
-%     hold on
-%     semilogx(trueErrN,Q.zDATAn)
-%     legend('Signal Variance','DT Variance'); title 'N2 Digital'
-%     figure
-%     semilogx(Q.yTrueH-backH,Q.zDATAn)
-%     hold on
-%     semilogx(trueErrH,Q.zDATAn)
-%     legend('Signal Variance','DT Variance'); title 'WV Digital'
-%     warning on
-% 
-%     fdtN = find(trueErrN > (Q.SNcoadd + backVarN));
-%     SNerr(fdtN) = trueErrN(fdtN);
-%     fdtH = find(trueErrH > (Q.SHcoadd + backVarH));
-%     SHerr(fdtH) = trueErrH(fdtH);
-% 
-%     SHerr = Q.SHcoadd;
-%     SNerr = Q.SNcoadd;
-%     fSH = find(SHerr < sqrt(backVarH));
-%     fSN = find(SNerr < sqrt(backVarN));
-%     fSHA = find(SHerrA < sqrt(backVarHA));
-%     fSNA = find(SNerrA < sqrt(backVarNA));
-%     SHerr(fSH) = backVarH;
-%     SNerr(fSN) = backVarN;
-%     SHerrA(fSHA) = backVarHA;
-%     SNerrA(fSNA) = backVarNA;
+    'not piecwise, so stop as there is no analog variance'
+    stoooopp
 end
 
 % use a posteriori analog variance, but either way apply covariance mask
@@ -561,15 +497,10 @@ else
     N2varT(f00) = backVarN;
     
     if in.pieceWise
-%        yvar = [WVvarA(1:dendNA(end)); N2varA(1:dendNA(end));...
-%               WVvar(1:dendN(end)); N2var(1:dendN(end))];
        yvar = [WVvarA(1:dendNA(end)); N2varA(1:dendNA(end));...
-           WVvarT(1:dendN(end)); N2varT(1:dendN(end))];
-%        yvar = [smooth(WVvarA(1:dendNA(end)),24); 
-%           smooth(N2varA(1:dendNA(end)),36);...
-%            WVvarT; N2varT];     
+           WVvarT(1:dendN(end)); N2varT(1:dendN(end))];  
     else
-        'dead code II'
+        'dead code II, not piecewise, should not even be here?'
         stooop
        yvar = [SHerrA(1:dendNA(end)); SNerrA(1:dendNA(end)); SHerr; SNerr];
     end
@@ -595,12 +526,8 @@ CHp = slope .* CNp; % note slope is in vmr units
 CNpA = ((SNcoaddA(fmmrzA(1)) - backNA) .* zNA(fmmrzA(1)).^2)...
     ./ (nNzA(fmmrzA(1)) .* tauRA(fmmrzA(1)) .* tauNA(fmmrzA(1))...
     .* olapA(fmmrzA(1)));
-%CHpA = ((SHcoaddA(fmmrz(1)) - backHA) .* zN(fmmrz(1)).^2) ./ (nNz(fmmrz(1))...
-%    .* tauR(fmmrz(1)) .* tauH(fmmrz(1)) .* olap(fmmrz(1)));
 CHpA = slopeA .* CNpA; % note slope is in vmr units
 
-% 'wrong A variance'
-% yvar = [Q.SHcoaddA; Q.SNcoaddA; SHerr; SNerr];
 Q.CNpA = CNpA;
 Q.CHpA = CHpA; %slope .* CNpA;
 Q.CNp = CNp;
@@ -654,17 +581,12 @@ Q.y2Hz = y2Hz;
 Q.N2rat = N2rat;
 Q.mAir = mAir;
 Q.mWV = mWV;
-%'fix Q.alphaRdata'
 Q.alphaRdata = alphaAer;
 Q.asrDATA = asrDATAs(1:dendN(end));
 Q.asrDATAA = asrDATAsA(1:dendNA(end));
-%Q.tauRdata = tauAer; Q.alphaRdata = alpha_mol_DATA(1:dendN(end))./10;
 Q.asrCorErr = alphaCorErr;
 Q.alphaCorErr = alphaCorErr;
 Q.mzsnd = zsndASL;
-%Q.nsndi = nsndi; Q.LR = LR(1:dendN(end)); Q.beta_mol_DATA =
-%beta_mol_DATA(1:dendN(end)); Q.alpha_mol_DATA =
-%alpha_mol_DATA(1:dendN(end));
 Q.nsnd = nsndi;
 Q.zsnd = zsndASL;
 Q.Tsnd = Tsndi;
@@ -674,24 +596,7 @@ Q.mmrSnd = mmri;
 Q.ralmoTimeEnd = timeEnd;
 Q.qvTrue = qvtrue;
 
-% make data from forward model; x(1:m) is log(q) on retrieval grid;
-% x(m+1:2*m) is extinction Retrieval grid
-% digital
-% dzRET = in.coRET .* dzDATA;
-% altRET = (Q.zDATAn(1)-dzDATA:dzRET:in.zOEM)';
-% if altRET(end) <= Q.zDATAn(end)
-%     zRET = [altRET; altRET(end)+dzRET];
-% else
-%     zRET = altRET;
-% end
-% % analog
-% altRETA = (Q.zDATAnA(1)-dzDATA:dzRET:in.zOEMA)';
-% if altRETA(end) <= Q.zDATAnA(end)
-%     zRETA = [altRETA; altRETA(end)+dzRET];
-% else
-%     zRETA = altRETA;
-% end
-
+% Q stuff on retrieval grid - first make retrieval grid
 dzRET = in.coRET .* dzDATA;
 altRET = (min(Q.zDATAn(1),Q.zDATAnA(1))-dzDATA:dzRET:max(in.zOEM,in.zOEMA))';
 if altRET(end) <= max(Q.zDATAn(end),Q.zDATAnA(end))
@@ -702,9 +607,7 @@ end
 
 Q.zRET = zRET;
 nzRET = N2rat .* exp(interp1(zsndASL,log(nsndi),zRET,'linear'));
-% nden = exp(interp1(zsndASL,log(nsndi),zN,'linear'));
-% nNz = N2rat .* nden; % Leblanc et al
-Q.nNret = nzRET; % Leblanc et al
+Q.nNret = nzRET; 
 Q.alphaRret = interp1(zN,alphaAer,Q.zRET,'linear','extrap');
 Q.alphaRdata = alphaAer(1:dendN(end));
 
@@ -776,8 +679,6 @@ tauNR = tauN./tauR;
 tauHRno = tauHno./tauRno;
 tauNRno = tauNno./tauRno;
 
-% lbackNA = polyval(pN,Q.zDATAnA); %Q.backNA; %
-% lbackHA = polyval(pH,Q.zDATAnA); %Q.backHA; %
 Q.wvTrad = in.slope .* (Q.tauH./Q.tauN) .* ((Q.yTrueH - Q.backTH)...
     ./(Q.yTrueN - Q.backTN));
 Q.wvTradNo = in.slope .* (Q.tauHno(1:dendN(end))...
@@ -786,30 +687,6 @@ Q.wvTradNo = in.slope .* (Q.tauHno(1:dendN(end))...
 Q.wvTradNoA = in.slopeA .* (Q.tauHnoA(1:dendNA(end))...
     ./ Q.tauNnoA(1:dendNA(end)))...
     .* ((Q.SHcoaddA - Q.backHA)./(Q.SNcoaddA - Q.backNA));
-% lwvTradNoA = in.slopeA .* (Q.tauHno(1:dendNA(end))...
-%     ./ Q.tauNno(1:dendNA(end)))...
-%     .* ((Q.SHcoaddA - lbackHA)./(Q.SNcoaddA - lbackNA));
-
-% figure
-% plot(Q.wvTradNo,Q.zDATAn)
-% hold on
-% plot(Q.wvTradNo,Q.zDATAn,'o')
-% plot(Q.wvTradNoA,Q.zDATAnA)
-% plot(lwvTradNoA,Q.zDATAnA,'x')
-% xlabel('WV (g/kg)')
-% legend('Digital WV','Dig WV-molecular only','Analog Constant','Analog linear')
-% ylim([0 6000])
-% 
-% figure
-% wvint = interp1(Q.zDATAn,Q.wvTradNo,Q.zDATAnA,'linear');
-% ratwv = Q.wvTradNoA ./ wvint;
-% lr = find(Q.zDATAnA > 800); % 0
-% hr = find(Q.zDATAnA > 1600); % 800
-% [pRat,sigmapRat,regressRat] = fitlinenp(Q.zDATAnA(1:hr(1)),ratwv(1:hr(1)));
-% rlin = polyval(pRat,Q.zDATAnA);
-% plot(ratwv,Q.zDATAnA)
-% hold on
-% plot(ratwv-rlin+1,Q.zDATAnA)
 
 return
 

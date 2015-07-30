@@ -2,7 +2,7 @@
 
 date = 20090906; %20150305;
 nb = '00'; % '00'
-VERSION = '2-0-0';
+VERSION = '2-0-1';
 outPath = '/Users/BobSica/Dropbox/matlab/matlabWork/fromMCH/ralmoOEMwvOutput/';
 fextout = [nb '30chan2-v' VERSION '.fig'];
 fextout2 = [nb '30chan2-v' VERSION '-pubPlt.fig'];
@@ -92,6 +92,7 @@ xlabel('H_2O Analog (%)')
 subplot(2,2,2)
 set(gca,'FontSize',9);
 ylim([0 10])
+xlim([-2 4])
 xlabel('N_2 Analog (%)')
 subplot(2,2,3)
 set(gca,'FontSize',9);
@@ -136,6 +137,9 @@ set(gcf,'Units','inches')
 set(gcf,'Position', [1 1 3.25 2.4375]);
 set(gca,'FontSize',9);
 ylim([0 12])
+hleg = legend('Statistical','\sigma_{Rayleigh}', 'Air Density',...
+    'Calibration','Overlap','Total','Location','Best');
+set(hleg,'FontSize',8,'Box','off');
 fn = [outPlot 'wvOEM' int2str(date) dextout '-errors.pdf'];
 export_fig(fn, '-pdf', '-nocrop')
 
@@ -149,26 +153,28 @@ ylim([0 12])
 fn = [outPlot 'wvOEM' int2str(date) dextout '-ASR.pdf'];
 export_fig(fn, '-pdf', '-nocrop')
 
+% trans errors
+hfig(9) = figure(12);
+set(gcf,'Units','inches')
+set(gcf,'Position', [1 1 3.25 2.4375]);
+set(gca,'FontSize',9);
+ylim([0 12])
+xlim([0 75])
+fn = [outPlot 'wvOEM' int2str(date) dextout '-Terrors.pdf'];
+export_fig(fn, '-pdf', '-nocrop')
+
 % Transmission
-hfig(9) = figure(8);
-'fix legend by hand'
+%'skipping transmission plot'
+hfig(10) = figure(8);
+%'fix legend by hand'
 set(gcf,'Units','inches')
 set(gcf,'Position', [1 1 3.25 2.4375]);
 set(gca,'FontSize',9);
 ho = findobj(gca,'LineStyle',':');
 set(ho,'LineStyle','none')
 ylim([0 12])
+xlim([0 2])
 fn = [outPlot 'wvOEM' int2str(date) dextout '-trans.pdf'];
-export_fig(fn, '-pdf', '-nocrop')
-
-% trans errors
-hfig(10) = figure(12);
-set(gcf,'Units','inches')
-set(gcf,'Position', [1 1 3.25 2.4375]);
-set(gca,'FontSize',9);
-ylim([0 12])
-xlim([0 50])
-fn = [outPlot 'wvOEM' int2str(date) dextout '-Terrors.pdf'];
 export_fig(fn, '-pdf', '-nocrop')
 
 savefig(hfig,[outPlot 'wvOEM' int2str(date) fextout2])
