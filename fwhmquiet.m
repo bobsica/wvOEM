@@ -25,6 +25,11 @@ end
 i = 2;
 while sign(y(i)-lev50) == sign(y(i-1)-lev50)
     i = i+1;
+    %sica:
+    if i >= length(y)
+        width = -999;
+    return
+    end
 end                                   %first crossing is between v(i-1) & v(i)
 interp = (lev50-y(i-1)) / (y(i)-y(i-1));
 tlead = x(i-1) + interp*(x(i)-x(i-1));

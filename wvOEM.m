@@ -12,26 +12,27 @@
 %v2-0-0
 %090600: 17500, 12000, 50, 80, 2300, 787.5, 787.5, var:false/false, 52.5*6/52.5, 3/5, OD
 %0905 12: 17500, 12000, 50, 80, 1500, 787.5, 787.5, var:false/false, 52.5*6/52.5, 3/5, OD
-%0305 12: 17500, 12000, 50, 80, 1200, 787.5, 787.5, var:false/false, 52.5/52.5, 3/5, OD
-% cutoff: 0305: 3, 0905: 2, 0906: 2
+%200305 12: 17500, 12000, 20, 20, 1000, 787.5, 787.5, var:false/false, 52.5/52.5, 3/5, OD
+%300305 12: 17500, 12000, 50, 80, 1200, 787.5, 787.5, var:false/false, 52.5/52.5, 3/5, OD
+% cutoff: 20-0305: 3, 0905: 2, 0906: 2, 30-0305: 3
 
 VERSION = '2-0-1'
-date = 20150305; %20090906; %20150305
-nb = '12';
+date = 20090906; %20090906; %20150305
+nb = '00';
 oemStop = 17500; 
 oemStopA = 12000;
 coRET = 3;
 coAddData = 5;
-oemGo = 1*(3.5.*coRET.*coAddData);
+oemGo = 6*(3.5.*coRET.*coAddData);
 oemGoAreal = 1*(3.5.*coRET.*coAddData); %20090906-6* for no spike
 in.LRfree = 50; % was 20 on 0305, 0308 50, 200905-6 50
 in.LRpbl = 80; % 50 on 0305; was 80 on otherwise
-in.LRtranHeight = 1200;
+in.LRtranHeight = 2300;
 corrLh = 787.5; % 90 (night) 360 (1/6grid, use 360); %360; %90 %100;
 corrLalpha = 787.5; %90 0906-2000
 varAV = false; % true - use variance of average, false - variance of measurements
 varAVA = false; 
-uFakvec = 3; % 0 use max, 1 is 0.8 cut, 2 is sum 0.8, 3 is Dof
+uFakvec = 2; % 0 use max, 1 is 0.8 cut, 2 is sum 0.8, 3 is Dof
 % logOutput turns on diary, savefigs for figure file, savedat for .mat file
 logOutput = true
 savefigs = true
@@ -182,7 +183,7 @@ dfacSigRamN = 0.1;
 dfacSlope = 0.05;
 dfacAlpha = 0.25; %0.5;
 dfacOD = 0.5; % 0.25, 0.20;
-dfacAng = 0.01; % 0.05
+dfacAng = 0.1; % 0.01 0.05
 dfacCNp = 0.1; % was 0.25;
 dfacCHp = 0.5; 
 
@@ -453,16 +454,16 @@ disp(str)
 % plot raw data
 handfig(1) = figure;
 subplot(1,2,1)
-plot(Q.y2Hz./1e6*y(1:mchanA),Q.zDATAnA,'b')
+plot(Q.y2Hz./1e6*y(1:mchanA),Q.zDATAnA./1000,'b')
 hold on
-plot(Q.y2Hz./1e6*y(1+mchanA:2*mchanA),Q.zDATAnA,'r')
+plot(Q.y2Hz./1e6*y(1+mchanA:2*mchanA),Q.zDATAnA./1000,'r')
 xlabel('ADC Count Rate (MHz)')
 ylabel('Altitude (km)')
 legend('Analog WV','Analog N2')
 subplot(1,2,2)
-semilogx(Q.y2Hz./1e6*y(1+2*mchanA:2*mchanA+mchanD),Q.zDATAn,'b')
+semilogx(Q.y2Hz./1e6*y(1+2*mchanA:2*mchanA+mchanD),Q.zDATAn./1000,'b')
 hold on
-semilogx(Q.y2Hz./1e6*y(1+2*mchanA+mchanD:mdata),Q.zDATAn,'red')
+semilogx(Q.y2Hz./1e6*y(1+2*mchanA+mchanD:mdata),Q.zDATAn./1000,'red')
 xlabel('Photocount Rate (MHz)')
 ylabel('Altitude (km)')
 legend('Digital Water Vapour','Digital N2')
@@ -623,11 +624,20 @@ ylim([0 1.05.*oemStop./1000])
 % plot retrievals of n and q
 handfig(6) = figure;
 if reality
-    nRalmo = length(ralmo.t) ./ ralmo.records;
-    itst = 1:1:length(ralmo.t);
+    lralmot = length(ralmo.t);
+    if exist('ralmo.records','var') == 0
+        ralmo.records = 1;
+        lralmot = length(ralmo.z);
+    end
+    nRalmo = lralmot ./ ralmo.records;
+    itst = 1:1:lralmot;
     mR = mod(itst,nRalmo);
     fmR = find(mR ==0);
-    rTime = ralmo.t(fmR);
+    if fmR > length(ralmo.t)
+        rTime = ralmo.t(1);
+    else
+        rTime = ralmo.t(fmR);
+    end
     fRalmo = find(rTime > Q.ralmoTimeEnd);
     iRalmo = fRalmo(1);
     'RALMO time ='
@@ -635,7 +645,7 @@ if reality
     'Analysis time ='
     datevec(Q.ralmoTimeEnd)
     gg = 1 + (iRalmo-1)*nRalmo;
-    semilogx(ralmo.q(gg:nRalmo+gg-1),(ralmo.z(gg:nRalmo+gg-1)-490)./1000,'b')
+    hwv1=semilogx(ralmo.q(gg:nRalmo+gg-1),(ralmo.z(gg:nRalmo+gg-1)-490)./1000,'b');
     hold on
 else
 %    semilogx(Q.qvTrueRET.*1000.*(mWV./mAir),Q.zRET./1000); % was ./(mAir
@@ -644,29 +654,33 @@ else
 end
 fd1 = find(Q.zRET > oemGoA);
 fdh = find(Q.zRET > oemStopA);
-semilogx(X.vmr(mbL:mbH).*1000.*(mWV./mAir).*(outSlopeA./in.slope),...
-    Q.zRET(mbL:mbH)./1000,'r','LineWidth',2)
-semilogx(Q.wvTradNoA,Q.zDATAnA./1000,'yo:');
-semilogx(Q.wvTradNo,Q.zDATAn./1000,'cx:');
-semilogx(Q.mmrSnd,Q.zsnd./1000,'g');
-semilogx(Q.qvTrueRET(mbL:mbH).*1000.*(mWV./mAir),Q.zRET(mbL:mbH)./1000,'k-.');
+hwv2 = semilogx(X.vmr(mbL:mbH).*1000.*(mWV./mAir).*(outSlopeA./in.slope),...
+    Q.zRET(mbL:mbH)./1000,'r','LineWidth',2);
+hwv3 = semilogx(Q.wvTradNoA,Q.zDATAnA./1000,'yo:');
+hwv4 = semilogx(Q.wvTradNo,Q.zDATAn./1000,'cx:');
+hwv5 = semilogx(Q.mmrSnd,Q.zsnd./1000,'g');
+hwv6=semilogx(Q.qvTrueRET(mbL:mbH).*1000.*(mWV./mAir),Q.zRET(mbL:mbH)./1000,'k-.');
 
 warning off
 ylabel('Altitude (km)')
 xlabel('WV Mixing Ratio (g/kg)')
 warning on
 
+hleg = legend([hwv1,hwv2,hwv5,hwv6],'Traditional','OEM','Sonde','a priori',...
+    'Location','SouthWest');
+set(hleg,'FontSize',8,'Box','off');
+
 ylim([Q.zRET(1) Q.zRET(end)]./1000)
-if logWV
-    pltx(1) = min(exp(x_a(mbL:mbH)).*1000.*(mWV./mAir));%./5;
-    pltx(2) = max(exp(x_a(mbL:mbH)).*1000.*(mWV./mAir));%.*5;
-else
-    pltx(1) = min(x_a(mbL:mbH).*1000.*(mWV./mAir));%./5;
-    pltx(2) = max(x_a(mbL:mbH).*1000.*(mWV./mAir));%.*5;
-end
+% if logWV
+%     pltx(1) = min(exp(x_a(mbL:mbH)).*1000.*(mWV./mAir));%./5;
+%     pltx(2) = max(exp(x_a(mbL:mbH)).*1000.*(mWV./mAir));%.*5;
+% else
+%     pltx(1) = min(x_a(mbL:mbH).*1000.*(mWV./mAir));%./5;
+%     pltx(2) = max(x_a(mbL:mbH).*1000.*(mWV./mAir));%.*5;
+% end
 plty = get(gca,'YLim');
-pltx = [.0001 10];
-axis([.0001 10 0 in.zOEM./1000]);
+pltx = get(gca,'XLim'); %[.0001 10];
+% axis([.0001 10 0 in.zOEM./1000]);
 semilogx(pltx,[round(Q.zRET(fini)) floor(Q.zRET(fini))]./1000,'k--')
 
 handfig(7) = figure;
@@ -691,24 +705,27 @@ ylabel('Altitude (km)')
 handfig(8) = figure;
 plot(exp(-xaAlpha(mbL:mbH)),Q.zRET(mbL:mbH)./1000)
 hold on
-plot(exp(-xAlpha(mbL:mbH)),Q.zRET(mbL:mbH)./1000)
+plot(exp(-xAlpha(mbL:mbH)),Q.zRET(mbL:mbH)./1000,'r')
 plot(Q.tauRnoA,Q.zDATAnA./1000,'g')
 xlabel('Transmission (355 nm)')
 ylabel('Altitude (km)')
 hleg = legend('a prioiri aerosol','retrieved aerosol','molecular',...
     'Location','East');
-set(hleg,'FontSize',7,'Box','off');
+set(hleg,'FontSize',8,'Box','off');
 plot(Q.tauRno,Q.zDATAn./1000,'g')
 if logAlpha
-    Tup = exp(-xAlpha(mbL:mbH))+exp(-xAlpha(mbL:mbH)).*sqrt((X.eo(mbL+m:mbH+m)));
-    Tdn = exp(-xAlpha(mbL:mbH))-exp(-xAlpha(mbL:mbH)).*sqrt((X.eo(mbL+m:mbH+m)));
+    Tup = exp(-xAlpha(mbL:mbH)).*sqrt((X.eo(mbL+m:mbH+m))); %exp(-xAlpha(mbL:mbH))+
+%    Tdn = exp(-xAlpha(mbL:mbH))-exp(-xAlpha(mbL:mbH)).*sqrt((X.eo(mbL+m:mbH+m)));
 else
-    Tup = exp(-xAlpha(mbL:mbH)) + sqrt((X.eo(mbL+m:mbH+m)));
-    Tdn = exp(-xAlpha(mbL:mbH)) - sqrt((X.eo(mbL+m:mbH+m)));
+    Tup = sqrt((X.eo(mbL+m:mbH+m))); % exp(-xAlpha(mbL:mbH)) +
+%    Tdn = exp(-xAlpha(mbL:mbH)) - sqrt((X.eo(mbL+m:mbH+m)));
 end
-jbfilly(Q.zRET(mbL:mbH)'./1000,Tup',Tdn','r','r',0,.25);
+horiz_errorbar(Q.zRET(mbL:mbH)'./1000,exp(-xAlpha(mbL:mbH)),Tup,'r');
+%jbfilly(Q.zRET(mbL:mbH)'./1000,Tup',Tdn','r','r',0,.25);
 xlim([0 2.25])
+ylim([0 Q.zRET(end)./1000])
 pltx = get(gca,'XLim');
+hold on
 plot(pltx,[Q.zRET(fini) Q.zRET(fini)]./1000,'k--')
 
 handfig(9) = figure;
@@ -782,7 +799,7 @@ plot(OlapErrq(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'-.')
 plot(totErrq.*100,Q.zRET(mbL:mbH)./1000,'k')
 hleg = legend('Statistical','\sigma_{Rayleigh}', 'Air Density',...
     'Calibration','Overlap','Total','Location','Best');
-set(hleg,'FontSize',8);
+set(hleg,'FontSize',8,'Box','off');
 xlabel('Mixing Ratio Uncertainty (%)')
 ylabel('Altitude (km)')
 pltx = get(gca,'XLim');
@@ -802,7 +819,7 @@ plot(OlapErro(mbL:mbH).*100,Q.zRET(mbL:mbH)./1000,'-.')
 plot(totErro.*100,Q.zRET(mbL:mbH)./1000,'k')
 hleg = legend('Statistical','\sigma_{Rayleigh}', 'Air Density',...
     'Calibration','Overlap','Total','Location','Best');
-set(hleg,'FontSize',8);
+set(hleg,'FontSize',8,'Box','off');
 %xlabel('Optical Depth Uncertainty (%)')
 xlabel('Transmission Uncertainty (%)')
 ylabel('Altitude (km)')

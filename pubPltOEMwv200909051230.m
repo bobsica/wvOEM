@@ -77,9 +77,9 @@ export_fig(fn, '-pdf', '-nocrop')
 % Vertical Resolution
 hfig(4) = figure(4);
 set(gcf,'Units','inches')
-set(gcf,'Position', [1 1 3.25 2.4375]);
+set(gcf,'Position', [1 1 5.75 4.3125]);
 set(gca,'FontSize',9);
-xlim([0 600])
+xlim([0 700])
 ylim([0 7])
 fn = [outPlot 'wvOEM' int2str(date) dextout '-vertRes.pdf'];
 export_fig(fn, '-pdf', '-nocrop')
@@ -95,6 +95,7 @@ xlabel('H_2O Analog (%)')
 subplot(2,2,2)
 set(gca,'FontSize',9);
 ylim([0 7])
+xlim([-.5 .5])
 xlabel('N_2 Analog (%)')
 subplot(2,2,3)
 set(gca,'FontSize',9);
@@ -104,7 +105,7 @@ ylim([0 7])
 xlabel('H_2O Digital (%)')
 subplot(2,2,4)
 set(gca,'FontSize',9);
-xlim([-3 3])
+xlim([-2 2])
 ylim([0 7])
 xlabel('N_2 Digital (%)')
 fn = [outPlot 'wvOEM' int2str(date) dextout '-residuals.pdf'];
@@ -113,7 +114,7 @@ export_fig(fn, '-pdf', '-nocrop')
 % wvmmr
 hfig(6) = figure(6);
 set(gcf,'Units','inches')
-set(gcf,'Position', [1 1 3.25 2.4375]);
+set(gcf,'Position', [1 1 5.75 4.3125]);
 xlabel('Water Vapor (g/kg)')
 set(gca,'FontSize',9);
 ho = findobj(gca,'Marker','o');
@@ -136,7 +137,7 @@ export_fig(fn, '-pdf', '-nocrop')
 % errors
 hfig(7) = figure(11);
 set(gcf,'Units','inches')
-set(gcf,'Position', [1 1 3.25 2.4375]);
+set(gcf,'Position', [1 1 5.75 4.3125]);
 set(gca,'FontSize',9);
 ylim([0 7])
 xlim([0 25])
@@ -149,7 +150,7 @@ export_fig(fn, '-pdf', '-nocrop')
 % ASR
 hfig(8) = figure(13);
 set(gcf,'Units','inches')
-set(gcf,'Position', [1 1 3.25 2.4375]);
+set(gcf,'Position', [1 1 5.75 4.3125]);
 set(gca,'FontSize',9);
 xlabel('Backscatter Ratio')
 ylim([0 7])
@@ -160,7 +161,7 @@ export_fig(fn, '-pdf', '-nocrop')
 % Transmission
 hfig(9) = figure(8);
 set(gcf,'Units','inches')
-set(gcf,'Position', [1 1 3.25 2.4375]);
+set(gcf,'Position', [1 1 5.75 4.3125]);
 set(gca,'FontSize',9);
 ho = findobj(gca,'LineStyle',':');
 set(ho,'LineStyle','none')
@@ -172,7 +173,7 @@ export_fig(fn, '-pdf', '-nocrop')
 % trans errors
 hfig(10) = figure(12);
 set(gcf,'Units','inches')
-set(gcf,'Position', [1 1 3.25 2.4375]);
+set(gcf,'Position', [1 1 5.75 4.3125]);
 set(gca,'FontSize',9);
 ylim([0 7])
 %xlim([0 50])

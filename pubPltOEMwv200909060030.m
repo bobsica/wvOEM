@@ -38,21 +38,21 @@ set(gcf,'Position', [1 1 5.75 4.3125]);
 subplot(2,2,1)
 title ''
 xlabel('Jacobian (ADC counts/bin/1800 shots)')
-ylim([0 12])
+ylim([0 14])
 set(gca,'FontSize',8);
 subplot(2,2,2)
 title ''
 xlabel('Jacobian (ADC counts/bin/1800 shots)')
-ylim([0 12])
+ylim([0 14])
 set(gca,'FontSize',8);
 subplot(2,2,3)
 title ''
-ylim([0 12])
+ylim([0 14])
 xlabel('Jacobian (photocounts/bin/1800 shots)')
 set(gca,'FontSize',8);
 subplot(2,2,4)
 title ''
-ylim([0 12])
+ylim([0 14])
 set(gca,'FontSize',8);
 xlabel('Jacobian (photocounts/bin/1800 shots)')
 fn = [outPlot 'wvOEM' int2str(date) dextout '-jacobians.pdf'];
@@ -74,10 +74,11 @@ export_fig(fn, '-pdf', '-nocrop')
 % Vertical Resolution
 hfig(4) = figure(4);
 set(gcf,'Units','inches')
-set(gcf,'Position', [1 1 3.25 2.4375]);
+set(gcf,'Position', [1 1 5.75 4.3125]);
 set(gca,'FontSize',9);
-%xlim([0 160])
-ylim([0 12])
+xlim([0 1100])
+set(gca,'XTick',[0 200 400 600 800 1000])
+ylim([0 14])
 fn = [outPlot 'wvOEM' int2str(date) dextout '-vertRes.pdf'];
 export_fig(fn, '-pdf', '-nocrop')
 
@@ -92,7 +93,7 @@ xlabel('H_2O Analog (%)')
 subplot(2,2,2)
 set(gca,'FontSize',9);
 ylim([0 10])
-xlim([-2 4])
+xlim([-.5 .5])
 xlabel('N_2 Analog (%)')
 subplot(2,2,3)
 set(gca,'FontSize',9);
@@ -102,7 +103,7 @@ ylim([0 10])
 xlabel('H_2O Digital (%)')
 subplot(2,2,4)
 set(gca,'FontSize',9);
-xlim([-10 10])
+xlim([-7.5 7.5])
 ylim([0 10])
 xlabel('N_2 Digital (%)')
 fn = [outPlot 'wvOEM' int2str(date) dextout '-residuals.pdf'];
@@ -111,7 +112,7 @@ export_fig(fn, '-pdf', '-nocrop')
 % wvmmr
 hfig(6) = figure(6);
 set(gcf,'Units','inches')
-set(gcf,'Position', [1 1 3.25 2.4375]);
+set(gcf,'Position', [1 1 5.75 4.3125]);
 xlabel('Water Vapor (g/kg)')
 set(gca,'FontSize',9);
 ho = findobj(gca,'Marker','o');
@@ -126,17 +127,17 @@ ho = findobj(gca,'Color','r');
 set(ho,'LineWidth',1)
 ho = findobj(gca,'Color','b');
 set(ho,'LineWidth',1)
-xlim([1e-4 10]); % 0905 [1e-1 10]
-ylim([0 12])
+xlim([1e-2 10]); % 0905 [1e-1 10]
+ylim([0 14])
 fn = [outPlot 'wvOEM' int2str(date) dextout '-wvmmr.pdf'];
 export_fig(fn, '-pdf', '-nocrop')
 
 % wv errors
 hfig(7) = figure(11);
 set(gcf,'Units','inches')
-set(gcf,'Position', [1 1 3.25 2.4375]);
+set(gcf,'Position', [1 1 5.75 4.3125]);
 set(gca,'FontSize',9);
-ylim([0 12])
+ylim([0 14])
 hleg = legend('Statistical','\sigma_{Rayleigh}', 'Air Density',...
     'Calibration','Overlap','Total','Location','Best');
 set(hleg,'FontSize',8,'Box','off');
@@ -146,20 +147,23 @@ export_fig(fn, '-pdf', '-nocrop')
 % ASR
 hfig(8) = figure(13);
 set(gcf,'Units','inches')
-set(gcf,'Position', [1 1 3.25 2.4375]);
+set(gcf,'Position', [1 1 5.75 4.3125]);
 set(gca,'FontSize',9);
 xlabel('Backscatter Ratio')
-ylim([0 12])
+ylim([0 14])
 fn = [outPlot 'wvOEM' int2str(date) dextout '-ASR.pdf'];
 export_fig(fn, '-pdf', '-nocrop')
 
 % trans errors
 hfig(9) = figure(12);
 set(gcf,'Units','inches')
-set(gcf,'Position', [1 1 3.25 2.4375]);
+set(gcf,'Position', [1 1 5.75 4.3125]);
 set(gca,'FontSize',9);
-ylim([0 12])
+ylim([0 14])
 xlim([0 75])
+hleg = legend('Statistical','\sigma_{Rayleigh}', 'Air Density',...
+    'Calibration','Overlap','Total','Location','East');
+set(hleg,'FontSize',8,'Box','off');
 fn = [outPlot 'wvOEM' int2str(date) dextout '-Terrors.pdf'];
 export_fig(fn, '-pdf', '-nocrop')
 
@@ -168,12 +172,12 @@ export_fig(fn, '-pdf', '-nocrop')
 hfig(10) = figure(8);
 %'fix legend by hand'
 set(gcf,'Units','inches')
-set(gcf,'Position', [1 1 3.25 2.4375]);
+set(gcf,'Position', [1 1 5.75 4.3125]);
 set(gca,'FontSize',9);
 ho = findobj(gca,'LineStyle',':');
 set(ho,'LineStyle','none')
-ylim([0 12])
-xlim([0 2])
+ylim([0 14])
+xlim([.25 1.5])
 fn = [outPlot 'wvOEM' int2str(date) dextout '-trans.pdf'];
 export_fig(fn, '-pdf', '-nocrop')
 
