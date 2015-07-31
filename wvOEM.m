@@ -720,7 +720,8 @@ else
     Tup = sqrt((X.eo(mbL+m:mbH+m))); % exp(-xAlpha(mbL:mbH)) +
 %    Tdn = exp(-xAlpha(mbL:mbH)) - sqrt((X.eo(mbL+m:mbH+m)));
 end
-horiz_errorbar(Q.zRET(mbL:mbH)'./1000,exp(-xAlpha(mbL:mbH)),Tup,'r');
+
+horiz_errorbar(Q.zRET(mbL:5:mbH)'./1000,exp(-xAlpha(mbL:5:mbH)),Tup(1:5:end),'r*')
 %jbfilly(Q.zRET(mbL:mbH)'./1000,Tup',Tdn','r','r',0,.25);
 xlim([0 2.25])
 ylim([0 Q.zRET(end)./1000])

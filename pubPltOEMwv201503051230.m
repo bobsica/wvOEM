@@ -196,6 +196,8 @@ ylabel 'Cloud Base Height (km)'
 xlim([datenum(2015,3,5,12,9,0) datenum(2015,3,5,12,31,0)])
 ylim([1 2])
 datetick('x','keeplimits'); %,'keepticks')
+fn = [outPlot 'wvOEM' int2str(date) dextout '-ceilo.pdf'];
+export_fig(fn, '-pdf', '-nocrop')
 
 savefig(hfig,[outPlot 'wvOEM' int2str(date) fextout2])
   
