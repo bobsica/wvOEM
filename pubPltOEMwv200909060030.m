@@ -181,5 +181,27 @@ xlim([.25 1.5])
 fn = [outPlot 'wvOEM' int2str(date) dextout '-trans.pdf'];
 export_fig(fn, '-pdf', '-nocrop')
 
+% extinction
+hfig(11) = figure(14);
+%'fix legend by hand'
+set(gcf,'Units','inches')
+set(gcf,'Position', [1 1 5.75 4.3125]);
+ho = findobj(gca,'LineStyle',':');
+set(ho,'LineStyle','none')
+subplot(1,2,1)
+set(gca,'FontSize',9);
+ylim([0 14])
+xlim([-10 600])
+%xlim([.25 1.5])
+subplot(1,2,2)
+set(gca,'FontSize',9);
+ylim([2.5 14])
+xlim([0 65])
+set(gca,'YTick',[3 5 7 9 11 13])
+ho = findobj(gca,'Color',[.929 .694 .125]);
+set(ho,'Color',[.85 .325 .098]);
+fn = [outPlot 'wvOEM' int2str(date) dextout '-extinct.pdf'];
+export_fig(fn, '-pdf', '-nocrop')
+
 savefig(hfig,[outPlot 'wvOEM' int2str(date) fextout2])
   

@@ -730,7 +730,7 @@ hold on
 plot(pltx,[Q.zRET(fini) Q.zRET(fini)]./1000,'k--')
 
 handfig(9) = figure;
-subplot(1,2,1)
+%subplot(1,2,1)
 plot(xaAlpha(mbL:mbH),Q.zRET(mbL:mbH)./1000)
 hold on
 plot(xAlpha(mbL:mbH),Q.zRET(mbL:mbH)./1000)
@@ -745,33 +745,6 @@ else
     Tdn = xAlpha(mbL:mbH) - sqrt((X.eo(mbL+m:mbH+m)));
 end
 jbfilly(Q.zRET(mbL:mbH)'./1000,Tup',Tdn','r','r',0,.25);
-pltx = get(gca,'XLim');
-plot(pltx,[Q.zRET(fini) Q.zRET(fini)]./1000,'k--')
-
-subplot(1,2,2)
-xaAlphaD = interp1(Q.zRET(mbL:mbH),xaAlpha(mbL:mbH),Q.zDATAn,'linear');
-xAlphaD = interp1(Q.zRET(mbL:mbH),xAlpha(mbL:mbH),Q.zDATAn,'linear');
-alp = derivative(xAlphaD(3:end-2))./derivative(Q.zDATAn(3:end-2));
-alpRET = derivative(xAlpha(mbL:mbH))./derivative(Q.zRET(mbL:mbH));
-alpR = derivative(-log(Q.tauRno))./derivative(Q.zDATAn);
-salp = smooth(alpRET,19);
-plot(alpR*1e6,Q.zDATAn./1000)
-hold on
-plot(salp*1e6,Q.zRET(mbL:mbH)./1000)
-xlabel 'Extinction (10^{6} m^{-1})'
-ylabel 'Altitude(km)'
-%title 'Extinction'
-legend('Molecular','Aerosol')
-plot([0 0],[0 round(Q.zDATAn(end)./1000)],'k:')
-if logAlpha
-    Tup = exp(-xAlpha(mbL:mbH))+exp(-xAlpha(mbL:mbH)).*sqrt((X.eo(mbL+m:mbH+m)));
-    Tdn = exp(-xAlpha(mbL:mbH))-exp(-xAlpha(mbL:mbH)).*sqrt((X.eo(mbL+m:mbH+m)));
-else
-    Tup = alpRET + sqrt(2.*abs(X.eo(mbL+m:mbH+m)./xAlpha(mbL:mbH))).*alpRET;
-    Tdn = alpRET - sqrt(2.*abs(X.eo(mbL+m:mbH+m)./xAlpha(mbL:mbH))).*alpRET;
-end
-jbfilly(Q.zRET(mbL:mbH)'./1000,1e6.*smooth(Tup,20)',1e6.*smooth(Tdn,20)'...
-    ,'r','r',0,.25);
 pltx = get(gca,'XLim');
 plot(pltx,[Q.zRET(fini) Q.zRET(fini)]./1000,'k--')
 
@@ -834,6 +807,60 @@ hold on
 plot(Q.asrDATAA,Q.zDATAnA./1000,'b')
 xlabel('Backscatter Ratio')
 ylabel('Altitude (km)')
+
+handfig(14) = figure;   % extinction coefficient plots
+subplot(1,2,1)
+Npoly = 4;                 % Order of polynomial fit
+Fsg = 35;                 % Window length
+[bsg,gsg] = sgolay(Npoly,Fsg);   % Calculate S-G coefficients
+xflip = flip(xAlpha);
+sdflip = flip(sqrt(X.eo(1+m:2*m))); %variance of xAlpha
+HalfWin  = ((Fsg+1)/2) -1;
+for n = (Fsg+1)/2:length(xAlpha)-(Fsg+1)/2,
+  SG1(n) = dot(gsg(:,2),xflip(n - HalfWin:n + HalfWin));
+  if ~logAlpha
+    SG1N(n) = dot(gsg(:,2),sdflip(n - HalfWin:n + HalfWin)); 
+  else
+      'Errors for extinction wrong for logAlpha true'
+      stooopppp
+  end
+end
+SG1 = SG1 ./ (Q.zRET(1)-Q.zRET(2)); % Turn differential into derivative
+%varReduce = 1./sum(gsg(:,2).^2'); % (1) - (2) because array is flipped!
+SG1N = SG1N ./ (Q.zRET(1)-Q.zRET(2));
+%sqrt(SG1N./varReduce)./(abs(Q.zRET(1)-Q.zRET(2)));
+xaAlphaD = interp1(Q.zRET(mbL:mbH),xaAlpha(mbL:mbH),Q.zDATAn,'linear');
+xAlphaD = interp1(Q.zRET(mbL:mbH),xAlpha(mbL:mbH),Q.zDATAn,'linear');
+alp = derivative(xAlphaD(3:end-2))./derivative(Q.zDATAn(3:end-2));
+alpRET = derivative(xAlpha(mbL:mbH))./derivative(Q.zRET(mbL:mbH));
+alpR = derivative(-log(Q.tauRno))./derivative(Q.zDATAn);
+salp = smooth(alpRET,19);
+plot(alpR*1e6,Q.zDATAn./1000)
+hold on
+% plot(salp*1e6,Q.zRET(mbL:mbH)./1000)
+plot(SG1*1e6,flip(Q.zRET(1:end-(Fsg+1)/2)./1000))
+%plot(SG1N*1e6,flip(Q.zRET(1:end-(Fsg+1)/2)./1000))
+xlabel 'Extinction (10^{6} m^{-1})'
+ylabel 'Altitude(km)'
+%title 'Extinction'
+hleg = legend('Molecular','Aerosol');
+set(hleg,'FontSize',8,'Box','off');
+%plot([0 0],[0 round(Q.zDATAn(end)./1000)],'k:')
+pltx = get(gca,'XLim');
+plot(pltx,[Q.zRET(fini) Q.zRET(fini)]./1000,'k--')
+subplot(1,2,2)
+plot(alpR*1e6,Q.zDATAn./1000)
+hold on
+%plot(salp*1e6,Q.zRET(mbL:mbH)./1000)
+xlabel 'Extinction (10^{6} m^{-1})'
+ylabel 'Altitude(km)'
+plty = get(gca,'YLim');
+ylim([2.5 plty(2)])
+horiz_errorbar(flip(Q.zRET(1:10:end-(Fsg+1)/2)./1000),SG1(1:10:end)*1e6...
+    ,SG1N(1:10:end)*1e6)
+hold on
+pltx = get(gca,'XLim');
+plot(pltx,[Q.zRET(fini) Q.zRET(fini)]./1000,'k--')
 
 if savedat
     Qwv = Q;
