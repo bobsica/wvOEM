@@ -34,9 +34,9 @@ varAV = false; % true - use variance of average, false - variance of measurement
 varAVA = false; 
 uFakvec = 2; % 0 use max, 1 is 0.8 cut, 2 is sum 0.8, 3 is Dof
 % logOutput turns on diary, savefigs for figure file, savedat for .mat file
-logOutput = true
-savefigs = true
-savedat = true
+logOutput = false
+savefigs = false
+savedat = false
 
 dextsp = [nb '30'];
 dataPath = '/Users/BobSica/Dropbox/matlab/matlabWork/fromMCH/ralmodata/';
